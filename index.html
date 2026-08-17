@@ -75,7 +75,10 @@
     border-bottom: 1px solid var(--border);
     backdrop-filter: blur(20px);
     position: relative; z-index: 10;
+    gap: 12px;
+    flex-wrap: wrap;
   }
+  .header-left { display: flex; align-items: center; gap: 16px; }
   .logo { display: flex; align-items: center; gap: 14px; }
   .logo-mark {
     width: 42px; height: 42px; border-radius: 10px;
@@ -180,6 +183,22 @@
   }
   @keyframes dash { to { background-position: 8px 0; } }
 
+  .layer.placeholder {
+    background: rgba(233, 184, 114, 0.05);
+    border: 2px dashed rgba(233, 184, 114, 0.5);
+    border-radius: 4px;
+    cursor: default;
+  }
+  .layer.placeholder::before {
+    content: 'Empty Slot';
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--accent); font-size: 12px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    pointer-events: none;
+  }
+  .layer.placeholder img { display: none; }
+
   .layer-handle {
     position: absolute; width: 10px; height: 10px;
     background: var(--accent); border: 1.5px solid #1a1410;
@@ -245,7 +264,7 @@
   }
   .layers-list {
     display: flex; flex-direction: column; gap: 6px;
-    max-height: 240px; overflow-y: auto; padding-right: 4px;
+    max-height: 220px; overflow-y: auto; padding-right: 4px;
   }
   .layer-item {
     display: flex; align-items: center; gap: 8px;
@@ -262,7 +281,10 @@
     width: 38px; height: 38px; border-radius: 6px;
     background: #000 center/cover; flex-shrink: 0;
     border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 10px;
   }
+  .layer-thumb.empty { background: rgba(233, 184, 114, 0.1); }
   .layer-name {
     flex: 1; font-size: 13px; color: var(--text);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -279,7 +301,6 @@
   .icon-btn:disabled { opacity: 0.25; cursor: not-allowed; }
   .icon-btn:disabled:hover { background: transparent; color: var(--muted); }
 
-  /* Size & Position Inputs */
   .input-grid {
     display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
   }
@@ -337,6 +358,7 @@
   }
 
   .btn {
+    -webkit-appearance: none; appearance: none; /* Strips native gray overlay */
     padding: 9px 16px; border-radius: 8px;
     border: 1px solid var(--border-2); background: var(--surface-2);
     color: var(--text); cursor: pointer;
@@ -349,17 +371,35 @@
     background: rgba(255,255,255,0.05); border-color: rgba(233,184,114,0.3);
     transform: translateY(-1px);
   }
+  .btn:active {
+    transform: translateY(0);
+    background: rgba(255,255,255,0.02);
+  }
+  .btn:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  
   .btn-primary {
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    color: #1a1410; border: none; font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2)) !important;
+    color: #1a1410 !important;
+    border: none; font-weight: 700;
     box-shadow: 0 4px 16px var(--accent-glow);
   }
   .btn-primary:hover {
     box-shadow: 0 6px 28px var(--accent-glow);
     transform: translateY(-2px);
   }
+  .btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px var(--accent-glow);
+  }
+  .btn-primary:focus {
+    outline: none;
+    box-shadow: 0 4px 16px var(--accent-glow), 0 0 0 3px rgba(233, 184, 114, 0.5);
+  }
 
-  /* Footer */
   .footer-bar {
     padding: 10px 24px;
     background: rgba(20, 16, 12, 0.9);
@@ -393,7 +433,7 @@
     border-left: 3px solid var(--accent);
     padding: 12px 18px; border-radius: 8px;
     color: var(--text); font-size: 13px;
-    display: flex; align-items: center; gap: 10leks;
+    display: flex; align-items: center; gap: 10px;
     box-shadow: 0 12px 40px rgba(0,0,0,0.5);
     animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     min-width: 240px; max-width: 360px;
@@ -406,13 +446,14 @@
   @keyframes toastOut { to { transform: translateX(120%); opacity: 0; } }
 
   .canvas-card.drag-over::after {
-    content: 'Drop images to add as layers';
+    content: 'Drop images to fill empty slots or add new layers';
     position: absolute; inset: 8px;
     background: rgba(233, 184, 114, 0.1);
     border: 2px dashed var(--accent); border-radius: 4px;
     display: flex; align-items: center; justify-content: center;
     color: var(--accent); font-family: 'Fraunces', serif; font-size: 22px;
     z-index: 100; pointer-events: none;
+    padding: 20px; text-align: center;
   }
 
   @media (max-width: 1024px) {
@@ -423,21 +464,28 @@
     .right-panel { display: none; }
     .footer-bar { flex-direction: column; gap: 8px; align-items: flex-start; }
     .footer-copy { text-align: left; }
+    .header { gap: 8px; }
+    .btn { padding: 8px 12px; font-size: 12px; }
   }
 </style>
 </head>
 <body>
+<!-- Hidden input for loading templates -->
+<input type="file" id="projectInput" class="file-input" accept=".json,application/json">
+
 <div class="app-grid">
   <header class="header">
-    <div class="logo">
-      <div class="logo-mark"><i class="fa-solid fa-layer-group"></i></div>
-      <div>
-        <div class="font-display" style="font-size:22px;font-weight:800;letter-spacing:-0.02em;line-height:1;">Workshop</div>
-        <div style="font-size:10px;color:var(--muted);letter-spacing:0.18em;text-transform:uppercase;margin-top:3px;">Layered Image Studio</div>
+    <div class="header-left">
+      <div class="logo">
+        <div class="logo-mark"><i class="fa-solid fa-layer-group"></i></div>
+        <div>
+          <div class="font-display" style="font-size:22px;font-weight:800;letter-spacing:-0.02em;line-height:1;">Workshop</div>
+          <div style="font-size:10px;color:var(--muted);letter-spacing:0.18em;text-transform:uppercase;margin-top:3px;">Layered Image Studio</div>
+        </div>
       </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;">
       <a href="https://github.com/chris1111/Workshop-Layered-Image-Studio" target="_blank" class="btn"><i class="fa-brands fa-github"></i> GitHub</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <button class="btn" id="clearBtn"><i class="fa-solid fa-trash-can"></i> Clear</button>
       <button class="btn btn-primary" id="exportBtn"><i class="fa-solid fa-download"></i> Export PNG</button>
     </div>
@@ -446,15 +494,22 @@
   <div class="main-grid">
     <div class="tool-rail">
       <input type="file" id="fileInput" class="file-input" multiple accept="image/*">
+      
       <button class="tool-btn active" id="selectTool" title="Select & Move (V)"><i class="fa-solid fa-arrow-pointer"></i></button>
       <button class="tool-btn" id="addTool" title="Add Images (A)"><i class="fa-solid fa-plus"></i></button>
+      
       <div class="rail-divider"></div>
+      
       <button class="tool-btn" id="bringFrontBtn" title="Bring to Front"><i class="fa-solid fa-bring-forward"></i></button>
       <button class="tool-btn" id="sendBackBtn" title="Send to Back"><i class="fa-solid fa-send-backward"></i></button>
+      
       <div class="rail-divider"></div>
+      
       <button class="tool-btn" id="centerBtn" title="Center Layer"><i class="fa-solid fa-bullseye"></i></button>
       <button class="tool-btn" id="resetBtn" title="Reset Transform"><i class="fa-solid fa-rotate-left"></i></button>
+      
       <div class="rail-divider"></div>
+      
       <button class="tool-btn" id="duplicateBtn" title="Duplicate Layer"><i class="fa-solid fa-clone"></i></button>
       <button class="tool-btn" id="deleteBtn" title="Delete Layer"><i class="fa-solid fa-trash"></i></button>
     </div>
@@ -481,6 +536,15 @@
         </div>
         <div class="layers-list" id="layersList">
           <div style="color:var(--muted);font-size:12px;text-align:center;padding:18px 0;font-style:italic;">No layers yet</div>
+        </div>
+      </div>
+
+      <!-- Templates Section -->
+      <div class="panel-section" id="templateSection">
+        <div class="panel-title"><span>Templates</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <button class="btn" id="saveProjectBtn" style="padding:7px;font-size:12px;justify-content:center;"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+          <button class="btn" id="loadProjectBtn" style="padding:7px;font-size:12px;justify-content:center;"><i class="fa-solid fa-folder-open"></i> Load</button>
         </div>
       </div>
 
@@ -573,6 +637,7 @@ const state = {
 const canvasCard = document.getElementById('canvasCard');
 const emptyState = document.getElementById('emptyState');
 const fileInput = document.getElementById('fileInput');
+const projectInput = document.getElementById('projectInput');
 const layersList = document.getElementById('layersList');
 const layerCount = document.getElementById('layerCount');
 const transformPanel = document.getElementById('transformPanel');
@@ -589,7 +654,7 @@ function toast(message, icon = 'fa-circle-info') {
   }, 2600);
 }
 
-function addImageLayer(src, name) {
+function addImageLayer(src, name, targetSlot = null) {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -597,28 +662,36 @@ function addImageLayer(src, name) {
       const cardRect = canvasCard.getBoundingClientRect();
       const cw = cardRect.width, ch = cardRect.height;
       
-      // Load at EXACT original pixel size
       let w = img.naturalWidth;
       let h = img.naturalHeight;
 
-      // Center it with a slight cascade offset for multiple layers
-      const offset = (state.layers.length % 5) * 22;
-      const x = (cw - w) / 2 + offset - 40;
-      const y = (ch - h) / 2 + offset - 40;
+      let layer;
 
-      const layer = {
-        id: ++state.layerIdCounter,
-        src,
-        name: name || `Layer ${state.layerIdCounter}`,
-        x, y, w, h,
-        rotation: 0,
-        opacity: 1,
-        scale: 1,
-        z: ++state.zCounter,
-        imgEl: img,
-        aspect: w / h // Store true aspect ratio
-      };
-      state.layers.push(layer);
+      if (targetSlot) {
+        targetSlot.src = src;
+        targetSlot.imgEl = img;
+        targetSlot.name = name || targetSlot.name;
+        layer = targetSlot;
+      } else {
+        const offset = (state.layers.length % 5) * 22;
+        const x = (cw - w) / 2 + offset - 40;
+        const y = (ch - h) / 2 + offset - 40;
+
+        layer = {
+          id: ++state.layerIdCounter,
+          src,
+          name: name || `Layer ${state.layerIdCounter}`,
+          x, y, w, h,
+          rotation: 0,
+          opacity: 1,
+          scale: 1,
+          z: ++state.zCounter,
+          imgEl: img,
+          aspect: w / h
+        };
+        state.layers.push(layer);
+      }
+      
       renderLayer(layer);
       selectLayer(layer.id);
       updateUI();
@@ -649,8 +722,16 @@ function renderLayer(layer) {
     canvasCard.appendChild(el);
     attachLayerEvents(el, layer);
   }
+  
   const img = el.querySelector('img');
-  img.src = layer.src;
+  if (layer.imgEl) {
+    img.src = layer.src;
+    el.classList.remove('placeholder');
+  } else {
+    img.removeAttribute('src');
+    el.classList.add('placeholder');
+  }
+  
   updateLayerTransform(layer);
 }
 
@@ -696,6 +777,7 @@ function attachLayerEvents(el, layer) {
 }
 
 function startDrag(e, layer, touchEvent) {
+  if (!layer.imgEl) return;
   state.isDragging = true;
   state.dragStart = { x: e.clientX, y: e.clientY, lx: layer.x, ly: layer.y };
   const el = document.querySelector(`[data-layer-id="${layer.id}"]`);
@@ -889,9 +971,15 @@ function updateLayerList() {
   layersList.innerHTML = sorted.map((layer, idx) => {
     const isFirst = idx === 0;
     const isLast = idx === sorted.length - 1;
+    const isEmpty = !layer.imgEl;
+    const thumbBg = isEmpty ? '' : `background-image:url('${layer.src}')`;
+    const thumbClass = isEmpty ? 'layer-thumb empty' : 'layer-thumb';
+    
     return `
     <div class="layer-item ${layer.id === state.selectedId ? 'selected' : ''}" data-id="${layer.id}">
-      <div class="layer-thumb" style="background-image:url('${layer.src}')"></div>
+      <div class="${thumbClass}" style="${thumbBg}">
+        ${isEmpty ? '<i class="fa-solid fa-image"></i>' : ''}
+      </div>
       <div class="layer-name">${layer.name}</div>
       <div class="layer-actions">
         <button class="icon-btn" data-action="up" data-id="${layer.id}" title="Move up" ${isFirst ? 'disabled' : ''}>
@@ -1031,9 +1119,9 @@ function resetTransform(id) {
   updateSliderValues(layer);
 }
 
-function clearAll() {
+function clearAll(skipToast = false) {
   if (state.layers.length === 0) {
-    toast('Canvas is already empty', 'fa-circle-info');
+    if (!skipToast) toast('Canvas is already empty', 'fa-circle-info');
     return;
   }
   state.layers.forEach(l => {
@@ -1043,35 +1131,143 @@ function clearAll() {
   state.layers = [];
   state.selectedId = null;
   updateUI();
-  toast('Canvas cleared', 'fa-broom');
+  if (!skipToast) toast('Canvas cleared', 'fa-broom');
 }
 
-// ==========================================
-// SMART CROP & EXPORT FUNCTION
-// ==========================================
-function exportCanvas() {
+function saveProject() {
   if (state.layers.length === 0) {
-    toast('Add some layers first', 'fa-triangle-exclamation');
+    toast('Nothing to save. Add some layers first.', 'fa-triangle-exclamation');
+    return;
+  }
+
+  document.getElementById('statusText').textContent = 'Saving template...';
+
+  setTimeout(() => {
+    const projectData = state.layers.map(l => ({
+      name: l.name,
+      x: l.x,
+      y: l.y,
+      w: l.w,
+      h: l.h,
+      rotation: l.rotation,
+      opacity: l.opacity,
+      scale: l.scale,
+      z: l.z,
+      aspect: l.aspect
+    }));
+
+    const jsonStr = JSON.stringify(projectData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `workshop-template-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    document.getElementById('statusText').textContent = 'Ready';
+    toast('Template saved! Load it later to apply to new images.', 'fa-floppy-disk');
+  }, 50);
+}
+
+function loadProject(file) {
+  if (!file) return;
+  document.getElementById('statusText').textContent = 'Loading template...';
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw new Error('Invalid template file format');
+
+      clearAll(true);
+      state.zCounter = 0;
+      state.layerIdCounter = 0;
+
+      for (const layerData of data) {
+        const newLayer = {
+          ...layerData,
+          id: ++state.layerIdCounter,
+          z: ++state.zCounter,
+          imgEl: null,
+          src: ''
+        };
+        state.layers.push(newLayer);
+        renderLayer(newLayer);
+      }
+
+      updateUI();
+      if (state.layers.length > 0) {
+        const topLayer = [...state.layers].sort((a, b) => b.z - a.z)[0];
+        selectLayer(topLayer.id);
+      }
+
+      document.getElementById('statusText').textContent = 'Ready';
+      toast('Template loaded! Add images to fill the empty slots.', 'fa-folder-open');
+    } catch (err) {
+      console.error(err);
+      document.getElementById('statusText').textContent = 'Ready';
+      toast('Failed to load template (invalid file)', 'fa-triangle-exclamation');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function handleFiles(files) {
+  const imgs = Array.from(files).filter(f => f.type.startsWith('image/'));
+  if (imgs.length === 0) {
+    toast('No image files selected', 'fa-triangle-exclamation');
+    return;
+  }
+  
+  let loaded = 0;
+  imgs.forEach((file) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const emptySlot = state.layers.find(l => !l.imgEl);
+      
+      if (emptySlot) {
+        await addImageLayer(e.target.result, file.name.replace(/\.[^.]+$/, ''), emptySlot);
+      } else {
+        await addImageLayer(e.target.result, file.name.replace(/\.[^.]+$/, ''));
+      }
+      
+      loaded++;
+      if (loaded === imgs.length) {
+        if (state.layers.some(l => !l.imgEl)) {
+          toast(`Added ${imgs.length} image(s). More slots to fill!`, 'fa-circle-check');
+        } else {
+          toast(`Added ${imgs.length} image${imgs.length > 1 ? 's' : ''}`, 'fa-circle-check');
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function exportCanvas() {
+  const exportableLayers = state.layers.filter(l => l.imgEl);
+  
+  if (exportableLayers.length === 0) {
+    toast('No images loaded to export', 'fa-triangle-exclamation');
     return;
   }
 
   document.getElementById('statusText').textContent = 'Processing...';
   document.getElementById('exportBtn').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Exporting...';
 
-  // Use a slight timeout to allow the UI to update before heavy processing
   setTimeout(() => {
     
-    // 1. Calculate the composite bounding box of all visible layers
     let globalMinX = Infinity, globalMinY = Infinity, globalMaxX = -Infinity, globalMaxY = -Infinity;
 
-    state.layers.forEach(layer => {
-      if (layer.opacity < 0.05) return; // Skip invisible layers
+    exportableLayers.forEach(layer => {
+      if (layer.opacity < 0.05) return;
 
-      // The center of the layer on the canvas
       const cx = layer.x + layer.w / 2;
       const cy = layer.y + layer.h / 2;
-
-      // The corners of the layer relative to its center, scaled
       const scaledW = (layer.w * layer.scale) / 2;
       const scaledH = (layer.h * layer.scale) / 2;
 
@@ -1086,7 +1282,6 @@ function exportCanvas() {
       const cos = Math.cos(angleRad);
       const sin = Math.sin(angleRad);
 
-      // Rotate corners and translate to canvas position
       corners.forEach(c => {
         const rx = (c.x * cos - c.y * sin) + cx;
         const ry = (c.x * sin + c.y * cos) + cy;
@@ -1098,33 +1293,25 @@ function exportCanvas() {
       });
     });
 
-    // If all layers were invisible, fallback
     if (globalMinX === Infinity) {
-      toast('No visible layers to export', 'fa-triangle-exclamation');
+      toast('No visible images to export', 'fa-triangle-exclamation');
       resetExportButton();
       return;
     }
 
-    // 2. Define exact output dimensions based on content
     const W = Math.ceil(globalMaxX - globalMinX);
     const H = Math.ceil(globalMaxY - globalMinY);
 
-    // 3. Create a canvas exactly the size of the content
     const canvas = document.createElement('canvas');
     canvas.width = W;
     canvas.height = H;
     const ctx = canvas.getContext('2d');
 
-    // DO NOT fill background. Keep it fully transparent.
-
-    // 4. Sort layers by Z-index
-    const sorted = [...state.layers].sort((a, b) => a.z - b.z);
+    const sorted = [...exportableLayers].sort((a, b) => a.z - b.z);
     let drawn = 0;
 
-    // 5. Translate the context so the top-left of the bounding box becomes (0,0)
     ctx.translate(-globalMinX, -globalMinY);
 
-    // 6. Draw each layer
     sorted.forEach(layer => {
       try {
         ctx.save();
@@ -1142,7 +1329,6 @@ function exportCanvas() {
       }
     });
 
-    // 7. Export to PNG
     try {
       canvas.toBlob((blob) => {
         if (!blob) {
@@ -1174,35 +1360,22 @@ function resetExportButton() {
   document.getElementById('exportBtn').innerHTML = '<i class="fa-solid fa-download"></i> Export PNG';
 }
 
-function handleFiles(files) {
-  const imgs = Array.from(files).filter(f => f.type.startsWith('image/'));
-  if (imgs.length === 0) {
-    toast('No image files selected', 'fa-triangle-exclamation');
-    return;
-  }
-  let loaded = 0;
-  imgs.forEach((file) => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      await addImageLayer(e.target.result, file.name.replace(/\.[^.]+$/, ''));
-      loaded++;
-      if (loaded === imgs.length) {
-        toast(`Added ${imgs.length} image${imgs.length > 1 ? 's' : ''}`, 'fa-circle-check');
-      }
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
 fileInput.addEventListener('change', (e) => {
   handleFiles(e.target.files);
   fileInput.value = '';
 });
 
+document.getElementById('saveProjectBtn').addEventListener('click', saveProject);
+document.getElementById('loadProjectBtn').addEventListener('click', () => projectInput.click());
+projectInput.addEventListener('change', (e) => {
+  if (e.target.files.length) loadProject(e.target.files[0]);
+  projectInput.value = '';
+});
+
 document.getElementById('addTool').addEventListener('click', () => fileInput.click());
 document.getElementById('emptyAddBtn').addEventListener('click', () => fileInput.click());
 document.getElementById('exportBtn').addEventListener('click', exportCanvas);
-document.getElementById('clearBtn').addEventListener('click', clearAll);
+document.getElementById('clearBtn').addEventListener('click', () => clearAll(false));
 document.getElementById('deleteBtn').addEventListener('click', () => {
   if (state.selectedId) deleteLayer(state.selectedId);
   else toast('Select a layer first', 'fa-circle-info');
@@ -1232,12 +1405,10 @@ document.getElementById('backBtn').addEventListener('click', () => state.selecte
 document.getElementById('dupBtn2').addEventListener('click', () => state.selectedId && duplicateLayer(state.selectedId));
 document.getElementById('delBtn2').addEventListener('click', () => state.selectedId && deleteLayer(state.selectedId));
 
-// Aspect Lock Toggle
 document.getElementById('lockAspect').addEventListener('change', (e) => {
   state.lockAspect = e.target.checked;
 });
 
-// X, Y Inputs
 ['posX', 'posY'].forEach(id => {
   const input = document.getElementById(id);
   input.addEventListener('input', () => {
@@ -1256,7 +1427,6 @@ document.getElementById('lockAspect').addEventListener('change', (e) => {
   input.addEventListener('focus', () => input.select());
 });
 
-// W, H Inputs (Manual Size Adjustment)
 ['sizeW', 'sizeH'].forEach(id => {
   const input = document.getElementById(id);
   input.addEventListener('input', () => {
@@ -1287,7 +1457,6 @@ document.getElementById('lockAspect').addEventListener('change', (e) => {
   input.addEventListener('focus', () => input.select());
 });
 
-// Sliders
 ['opacitySlider', 'scaleSlider', 'rotateSlider'].forEach(id => {
   const s = document.getElementById(id);
   s.addEventListener('input', () => {
@@ -1310,7 +1479,6 @@ document.getElementById('lockAspect').addEventListener('change', (e) => {
   s.addEventListener('mousedown', () => updateSliderFill(id));
 });
 
-// Drag & Drop
 let dragCounter = 0;
 canvasCard.addEventListener('dragenter', (e) => {
   e.preventDefault();
@@ -1333,7 +1501,6 @@ canvasCard.addEventListener('drop', (e) => {
   if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
 });
 
-// Paste
 window.addEventListener('paste', (e) => {
   const items = e.clipboardData?.items;
   if (!items) return;
@@ -1350,7 +1517,6 @@ window.addEventListener('paste', (e) => {
   }
 });
 
-// Keyboard Shortcuts
 document.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT') return;
   if (e.key === 'Delete' || e.key === 'Backspace') {
