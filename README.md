@@ -1,3 +1,4 @@
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://github.com/chris1111/Workshop-Layered-Image-Studio/blob/main/LICENSE) [![pages-build-deployment](https://github.com/chris1111/Workshop-Layered-Image-Studio/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/chris1111/Workshop-Layered-Image-Studio/actions/workflows/pages/pages-build-deployment)
 # Workshop Layered Image Studio
 
 ## Start using ➢ [Workshop Layered Image Studio](https://chris1111.github.io/Workshop-Layered-Image-Studio/)
