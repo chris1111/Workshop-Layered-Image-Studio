@@ -1,5 +1,10 @@
 # Workshop Layered Image Studio
 
+## Start using ➢ [Workshop Layered Image Studio](https://chris1111.github.io/Workshop-Layered-Image-Studio/)
+
+### Combined with this tools ➥ [Icon-Studio](https://chris1111.github.io/Icon-Studio/) ➥ [Image Resizer](https://chris1111.github.io/Image-Resizer/) 
+they are the perfect tools for creating themes icons for OpenCore or Clover.
+
 ### The Workshop is a lightweight, privacy-first, browser-based image compositing tool designed for stacking and manipulating transparent images (like PNGs) with pixel-perfect precision.
 
 ## Its core purposes are:
