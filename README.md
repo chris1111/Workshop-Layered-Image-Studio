@@ -40,6 +40,8 @@
 	7	Perfect PNG Export 🖼️
 	◦	True to Size: Exported images are now exactly the size of the visible content (no more 900x560 background canvas!).
 	◦	100% Transparent: The brown background is completely gone in the exported file.
+	◦	Every new layer will now start with no visible shadow, and the panel sliders will show 0px blur and 0% opacity on selection.
+	
 	
 
 </details>
