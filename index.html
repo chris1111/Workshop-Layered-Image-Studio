@@ -281,10 +281,10 @@
         <div class="panel-title" style="margin-top:20px;"><span>Shadow</span></div>
         <div class="input-grid">
           <div class="input-row"><label>X</label><input type="number" class="num-input" id="shadowX" value="0"></div>
-          <div class="input-row"><label>Y</label><input type="number" class="num-input" id="shadowY" value="8"></div>
+          <div class="input-row"><label>Y</label><input type="number" class="num-input" id="shadowY" value="0"></div>
         </div>
-        <div class="slider-row" style="margin-top:8px;"><div class="slider-label"><span>Blur</span><span id="shadowBlurVal">14px</span></div><input type="range" id="shadowBlur" min="0" max="50" value="14"></div>
-        <div class="slider-row"><div class="slider-label"><span>Opacity</span><span id="shadowOpacityVal">45%</span></div><input type="range" id="shadowOpacity" min="0" max="100" value="45"></div>
+        <div class="slider-row" style="margin-top:8px;"><div class="slider-label"><span>Blur</span><span id="shadowBlurVal">14px</span></div><input type="range" id="shadowBlur" min="0" max="50" value="0"></div>
+        <div class="slider-row"><div class="slider-label"><span>Opacity</span><span id="shadowOpacityVal">0%</span></div><input type="range" id="shadowOpacity" min="0" max="100" value="0"></div>
         <div class="slider-row"><div class="slider-label"><span>Color</span></div><input type="color" id="shadowColor" value="#000000"></div>
         
         <div class="panel-title" style="margin-top:20px;"><span>Layer Order</span></div>
@@ -550,7 +550,7 @@ function addImageLayer(src, name, targetSlot = null) {
       if (targetSlot) { targetSlot.src = src; targetSlot.imgEl = img; targetSlot.name = name || targetSlot.name; layer = targetSlot; }
       else {
         const offset = (state.layers.length % 5) * 22;
-        layer = { id: ++state.layerIdCounter, src, name: name || `Layer ${state.layerIdCounter}`, x: (cw - w) / 2 + offset - 40, y: (ch - h) / 2 + offset - 40, w, h, rotation: 0, opacity: 1, scale: 1, z: ++state.zCounter, imgEl: img, aspect: w / h, canvasEl: null, canvasCtx: null, shadow: { x: 0, y: 8, blur: 14, opacity: 0.45, color: '#000000' } };
+        layer = { id: ++state.layerIdCounter, src, name: name || `Layer ${state.layerIdCounter}`, x: (cw - w) / 2 + offset - 40, y: (ch - h) / 2 + offset - 40, w, h, rotation: 0, opacity: 1, scale: 1, z: ++state.zCounter, imgEl: img, aspect: w / h, canvasEl: null, canvasCtx: null, shadow: { x: 0, y: 0, blur: 0, opacity: 0.0, color: '#000000' } };
         state.layers.push(layer);
       }
       renderLayer(layer); selectLayer(layer.id); updateUI(); resolve(layer);
