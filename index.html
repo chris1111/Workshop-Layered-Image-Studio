@@ -11,466 +11,131 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
   :root {
-    --bg: #14100c;
-    --bg-2: #1c1814;
-    --surface: rgba(28, 24, 20, 0.65);
-    --surface-2: rgba(42, 36, 28, 0.72);
-    --border: rgba(255, 220, 180, 0.08);
-    --border-2: rgba(255, 220, 180, 0.16);
-    --text: #f5ebde;
-    --muted: #a89786;
-    --accent: #e9b872;
-    --accent-2: #ff7849;
-    --accent-glow: rgba(233, 184, 114, 0.4);
-    --danger: #e85d5d;
+    --bg: #14100c; --bg-2: #1c1814;
+    --surface: rgba(28, 24, 20, 0.65); --surface-2: rgba(42, 36, 28, 0.72);
+    --border: rgba(255, 220, 180, 0.08); --border-2: rgba(255, 220, 180, 0.16);
+    --text: #f5ebde; --muted: #a89786;
+    --accent: #e9b872; --accent-2: #ff7849;
+    --accent-glow: rgba(233, 184, 114, 0.4); --danger: #e85d5d;
   }
   * { box-sizing: border-box; }
   html, body {
-    margin: 0; padding: 0;
-    background: var(--bg); color: var(--text);
+    margin: 0; padding: 0; background: var(--bg); color: var(--text);
     font-family: 'Space Grotesk', sans-serif;
     overflow: hidden; height: 100vh; -webkit-font-smoothing: antialiased;
   }
   .font-display { font-family: 'Fraunces', serif; }
-
   body::before {
     content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-    background:
-      radial-gradient(ellipse 1000px 700px at 12% 15%, rgba(233, 184, 114, 0.10), transparent 60%),
-      radial-gradient(ellipse 800px 600px at 88% 85%, rgba(255, 120, 73, 0.08), transparent 60%),
-      radial-gradient(ellipse 600px 400px at 50% 50%, rgba(180, 130, 90, 0.05), transparent 70%);
+    background: radial-gradient(ellipse 1000px 700px at 12% 15%, rgba(233, 184, 114, 0.10), transparent 60%), radial-gradient(ellipse 800px 600px at 88% 85%, rgba(255, 120, 73, 0.08), transparent 60%);
   }
   body::after {
     content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' /%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 0.9 0 0 0 0 0.7 0 0 0 0.06 0' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    opacity: 0.4; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
   }
-
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(233, 184, 114, 0.18); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(233, 184, 114, 0.35); }
-
-  .glass {
-    background: var(--surface);
-    backdrop-filter: blur(18px) saturate(140%);
-    -webkit-backdrop-filter: blur(18px) saturate(140%);
-    border: 1px solid var(--border);
-  }
-  .app-grid {
-    display: grid;
-    grid-template-rows: auto 1fr auto;
-    height: 100vh; position: relative; z-index: 1;
-  }
-  .main-grid {
-    display: grid;
-    grid-template-columns: 80px 1fr 320px;
-    overflow: hidden;
-  }
-
-  .header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 24px;
-    background: linear-gradient(to bottom, rgba(20,16,12,0.95), rgba(20,16,12,0.7));
-    border-bottom: 1px solid var(--border);
-    backdrop-filter: blur(20px);
-    position: relative; z-index: 10;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
+  .app-grid { display: grid; grid-template-rows: auto 1fr auto; height: 100vh; position: relative; z-index: 1; }
+  .main-grid { display: grid; grid-template-columns: 80px 1fr 320px; overflow: hidden; }
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; background: linear-gradient(to bottom, rgba(20,16,12,0.95), rgba(20,16,12,0.7)); border-bottom: 1px solid var(--border); backdrop-filter: blur(20px); position: relative; z-index: 10; gap: 12px; flex-wrap: wrap; }
   .header-left { display: flex; align-items: center; gap: 16px; }
   .logo { display: flex; align-items: center; gap: 14px; }
-  .logo-mark {
-    width: 42px; height: 42px; border-radius: 10px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    display: flex; align-items: center; justify-content: center;
-    color: #1a1410; font-size: 18px; position: relative; overflow: hidden;
-    box-shadow: 0 8px 24px var(--accent-glow);
-  }
-  .logo-mark::before {
-    content: ''; position: absolute; inset: -50%;
-    background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.4), transparent 60%);
-    animation: spin 8s linear infinite;
-  }
+  .logo-mark { width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: flex; align-items: center; justify-content: center; color: #1a1410; font-size: 18px; position: relative; overflow: hidden; box-shadow: 0 8px 24px var(--accent-glow); }
+  .logo-mark::before { content: ''; position: absolute; inset: -50%; background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.4), transparent 60%); animation: spin 8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .logo-mark i { position: relative; z-index: 1; }
-
   .file-input { display: none; }
-
-  .tool-rail {
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
-    padding: 16px 12px;
-    background: rgba(20, 16, 12, 0.5);
-    border-right: 1px solid var(--border);
-  }
-  .tool-btn {
-    width: 48px; height: 48px; border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    background: transparent; color: var(--muted);
-    border: 1px solid transparent; cursor: pointer;
-    transition: all 0.2s ease; font-size: 16px;
-  }
-  .tool-btn:hover {
-    background: var(--surface-2); color: var(--text);
-    border-color: var(--border-2);
-  }
-  .tool-btn.active {
-    background: rgba(233, 184, 114, 0.12); color: var(--accent);
-    border-color: rgba(233, 184, 114, 0.3);
-    box-shadow: 0 0 24px rgba(233, 184, 114, 0.15);
-  }
-  .rail-divider {
-    width: 32px; height: 1px;
-    background: var(--border); margin: 6px 0;
-  }
-
-  .canvas-wrap {
-    position: relative; overflow: hidden;
-    background:
-      radial-gradient(ellipse at center, rgba(255,200,150,0.04), transparent 70%),
-      var(--bg-2);
-    display: flex; align-items: center; justify-content: center;
-    padding: 32px;
-  }
-  .canvas-wrap::before {
-    content: ''; position: absolute; inset: 0; pointer-events: none;
-    background-image:
-      linear-gradient(rgba(255,220,180,0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,220,180,0.025) 1px, transparent 1px);
-    background-size: 32px 32px;
-  }
-
-  .canvas-card {
-    position: relative;
-    width: 900px; height: 560px; max-width: 100%; max-height: 100%;
-    background: #0f0c09;
-    border-radius: 4px;
-    box-shadow:
-      0 0 0 1px rgba(255,220,180,0.08),
-      0 30px 80px -10px rgba(0,0,0,0.7),
-      0 0 100px -20px rgba(233,184,114,0.18);
-    overflow: hidden;
-    cursor: default;
-    user-select: none;
-  }
-  .canvas-card::before {
-    content: ''; position: absolute; inset: 0; z-index: 0;
-    background-image:
-      linear-gradient(45deg, rgba(255,255,255,0.018) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.018) 75%),
-      linear-gradient(45deg, rgba(255,255,255,0.018) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.018) 75%);
-    background-size: 24px 24px;
-    background-position: 0 0, 12px 12px;
-  }
-
-  .layer {
-    position: absolute; cursor: grab;
-    transform-origin: center center;
-    will-change: transform;
-    touch-action: none;
-  }
-  .layer img {
-    display: block; width: 100%; height: 100%;
-    pointer-events: none; -webkit-user-drag: none;
-    filter: drop-shadow(0 8px 14px rgba(0,0,0,0.45));
-  }
+  .tool-rail { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 12px; background: rgba(20, 16, 12, 0.5); border-right: 1px solid var(--border); }
+  .tool-btn { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: transparent; color: var(--muted); border: 1px solid transparent; cursor: pointer; transition: all 0.2s ease; font-size: 16px; }
+  .tool-btn:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-2); }
+  .tool-btn.active { background: rgba(233, 184, 114, 0.12); color: var(--accent); border-color: rgba(233, 184, 114, 0.3); box-shadow: 0 0 24px rgba(233, 184, 114, 0.15); }
+  .rail-divider { width: 32px; height: 1px; background: var(--border); margin: 6px 0; }
+  .canvas-wrap { position: relative; overflow: hidden; background: radial-gradient(ellipse at center, rgba(255,200,150,0.04), transparent 70%), var(--bg-2); display: flex; align-items: center; justify-content: center; padding: 32px; }
+  .canvas-card { position: relative; width: 900px; height: 560px; max-width: 100%; max-height: 100%; background: #0f0c09; border-radius: 4px; box-shadow: 0 0 0 1px rgba(255,220,180,0.08), 0 30px 80px -10px rgba(0,0,0,0.7); overflow: hidden; cursor: default; user-select: none; }
+  .canvas-card::before { content: ''; position: absolute; inset: 0; z-index: 0; background-image: linear-gradient(45deg, rgba(255,255,255,0.018) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.018) 75%), linear-gradient(45deg, rgba(255,255,255,0.018) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.018) 75%); background-size: 24px 24px; background-position: 0 0, 12px 12px; }
+  .canvas-card.eraser-mode { cursor: none; }
+  .layer { position: absolute; cursor: grab; transform-origin: center center; will-change: transform; touch-action: none; }
+  .layer canvas, .layer img { display: block; width: 100%; height: 100%; pointer-events: none; -webkit-user-drag: none; }
   .layer.dragging { cursor: grabbing; }
-  .layer.selected::after {
-    content: ''; position: absolute; inset: -2px;
-    border: 1.5px dashed var(--accent); border-radius: 2px;
-    pointer-events: none;
-    box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 0 24px var(--accent-glow);
-    animation: dash 0.6s linear infinite;
-  }
+  .layer.selected::after { content: ''; position: absolute; inset: -2px; border: 1.5px dashed var(--accent); border-radius: 2px; pointer-events: none; box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 0 24px var(--accent-glow); animation: dash 0.6s linear infinite; }
   @keyframes dash { to { background-position: 8px 0; } }
-
-  .layer.placeholder {
-    background: rgba(233, 184, 114, 0.05);
-    border: 2px dashed rgba(233, 184, 114, 0.5);
-    border-radius: 4px;
-    cursor: default;
-  }
-  .layer.placeholder::before {
-    content: 'Empty Slot';
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    color: var(--accent); font-size: 12px;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    pointer-events: none;
-  }
-  .layer.placeholder img { display: none; }
-
-  .layer-handle {
-    position: absolute; width: 10px; height: 10px;
-    background: var(--accent); border: 1.5px solid #1a1410;
-    border-radius: 2px; z-index: 10; display: none;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-  }
+  .layer.placeholder { background: rgba(233, 184, 114, 0.05); border: 2px dashed rgba(233, 184, 114, 0.5); border-radius: 4px; cursor: default; }
+  .layer.placeholder::before { content: 'Empty Slot'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--accent); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; pointer-events: none; }
+  .layer.placeholder canvas, .layer.placeholder img { display: none; }
+  .layer-handle { position: absolute; width: 10px; height: 10px; background: var(--accent); border: 1.5px solid #1a1410; border-radius: 2px; z-index: 10; display: none; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }
   .layer.selected .layer-handle { display: block; }
-  .handle-tl { top: -5px; left: -5px; cursor: nwse-resize; }
-  .handle-tr { top: -5px; right: -5px; cursor: nesw-resize; }
-  .handle-bl { bottom: -5px; left: -5px; cursor: nesw-resize; }
-  .handle-br { bottom: -5px; right: -5px; cursor: nwse-resize; }
-  .handle-rot {
-    top: -28px; left: 50%; transform: translateX(-50%);
-    width: 14px; height: 14px; border-radius: 50%;
-    cursor: grab; background: var(--accent-2);
-    border: 2px solid #1a1410;
-  }
-  .handle-rot::before {
-    content: ''; position: absolute;
-    top: 100%; left: 50%; width: 1px; height: 14px;
-    background: var(--accent); transform: translateX(-50%);
-  }
-
-  .empty-state {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 16px; color: var(--muted);
-    pointer-events: none; z-index: 1;
-  }
+  .handle-tl { top: -5px; left: -5px; cursor: nwse-resize; } .handle-tr { top: -5px; right: -5px; cursor: nesw-resize; } .handle-bl { bottom: -5px; left: -5px; cursor: nesw-resize; } .handle-br { bottom: -5px; right: -5px; cursor: nwse-resize; }
+  .handle-rot { top: -28px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; border-radius: 50%; cursor: grab; background: var(--accent-2); border: 2px solid #1a1410; }
+  .handle-rot::before { content: ''; position: absolute; top: 100%; left: 50%; width: 1px; height: 14px; background: var(--accent); transform: translateX(-50%); }
+  .empty-state { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: var(--muted); pointer-events: none; z-index: 1; }
   .empty-state.hidden { display: none; }
-  .empty-icon {
-    width: 80px; height: 80px; border-radius: 50%;
-    background: linear-gradient(135deg, rgba(233,184,114,0.12), rgba(255,120,73,0.08));
-    border: 1px dashed rgba(233,184,114,0.3);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 28px; color: var(--accent);
-  }
-  .empty-state h2 {
-    font-family: 'Fraunces', serif; font-size: 30px; font-weight: 500;
-    color: var(--text); margin: 0; letter-spacing: -0.01em;
-  }
-  .empty-formats {
-    font-size: 10px; color: var(--muted);
-    opacity: 0.7; letter-spacing: 0.2em;
-    text-transform: uppercase; margin-top: 4px;
-  }
-
-  .right-panel {
-    background: rgba(20, 16, 12, 0.55);
-    border-left: 1px solid var(--border);
-    display: flex; flex-direction: column;
-    overflow: hidden;
-  }
-  .panel-section {
-    padding: 18px 18px; border-bottom: 1px solid var(--border);
-  }
-  .panel-title {
-    font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em;
-    color: var(--muted); margin-bottom: 14px;
-    display: flex; align-items: center; justify-content: space-between;
-    font-weight: 600;
-  }
-  .layers-list {
-    display: flex; flex-direction: column; gap: 6px;
-    max-height: 220px; overflow-y: auto; padding-right: 4px;
-  }
-  .layer-item {
-    display: flex; align-items: center; gap: 8px;
-    padding: 8px; border-radius: 8px;
-    background: rgba(0,0,0,0.2); border: 1px solid transparent;
-    cursor: pointer; transition: all 0.15s ease;
-  }
+  .empty-icon { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, rgba(233,184,114,0.12), rgba(255,120,73,0.08)); border: 1px dashed rgba(233,184,114,0.3); display: flex; align-items: center; justify-content: center; font-size: 28px; color: var(--accent); }
+  .empty-state h2 { font-family: 'Fraunces', serif; font-size: 30px; font-weight: 500; color: var(--text); margin: 0; letter-spacing: -0.01em; }
+  .empty-formats { font-size: 10px; color: var(--muted); opacity: 0.7; letter-spacing: 0.2em; text-transform: uppercase; margin-top: 4px; }
+  .right-panel { background: rgba(20, 16, 12, 0.55); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+  .panel-section { padding: 18px 18px; border-bottom: 1px solid var(--border); }
+  .panel-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; font-weight: 600; }
+  .layers-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; padding-right: 4px; }
+  .layer-item { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 8px; background: rgba(0,0,0,0.2); border: 1px solid transparent; cursor: pointer; transition: all 0.15s ease; }
   .layer-item:hover { background: rgba(0,0,0,0.35); }
-  .layer-item.selected {
-    background: rgba(233, 184, 114, 0.08);
-    border-color: rgba(233, 184, 114, 0.3);
-  }
-  .layer-thumb {
-    width: 38px; height: 38px; border-radius: 6px;
-    background: #000 center/cover; flex-shrink: 0;
-    border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    color: var(--muted); font-size: 10px;
-  }
+  .layer-item.selected { background: rgba(233, 184, 114, 0.08); border-color: rgba(233, 184, 114, 0.3); }
+  .layer-thumb { width: 38px; height: 38px; border-radius: 6px; background: #000 center/cover; flex-shrink: 0; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 10px; }
   .layer-thumb.empty { background: rgba(233, 184, 114, 0.1); }
-  .layer-name {
-    flex: 1; font-size: 13px; color: var(--text);
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
+  .layer-name { flex: 1; font-size: 13px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .layer-actions { display: flex; gap: 2px; }
-  .icon-btn {
-    width: 24px; height: 24px; border-radius: 5px;
-    border: none; background: transparent; color: var(--muted);
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    font-size: 10px; transition: all 0.15s ease;
-  }
+  .icon-btn { width: 24px; height: 24px; border-radius: 5px; border: none; background: transparent; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; transition: all 0.15s ease; }
   .icon-btn:hover { background: rgba(255,255,255,0.06); color: var(--text); }
   .icon-btn.danger:hover { color: var(--danger); background: rgba(232,93,93,0.1); }
   .icon-btn:disabled { opacity: 0.25; cursor: not-allowed; }
-  .icon-btn:disabled:hover { background: transparent; color: var(--muted); }
-
-  .input-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-  }
-  .input-row {
-    display: flex; align-items: center; gap: 6px;
-    background: rgba(0,0,0,0.3); border: 1px solid var(--border);
-    border-radius: 6px; padding: 6px 10px;
-    transition: border-color 0.15s ease;
-  }
+  .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .input-row { display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; transition: border-color 0.15s ease; }
   .input-row:focus-within { border-color: var(--accent); }
-  .input-row label {
-    font-size: 11px; color: var(--muted); font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.05em;
-    width: 14px;
-  }
-  .num-input {
-    background: transparent; border: none; color: var(--text);
-    font-family: inherit; font-size: 13px; width: 100%; outline: none;
-    font-variant-numeric: tabular-nums;
-  }
-  .num-input::-webkit-outer-spin-button,
-  .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-  
-  .aspect-lock {
-    display: flex; align-items: center; justify-content: center;
-    gap: 8px; margin-top: 8px; font-size: 11px; color: var(--muted);
-    cursor: pointer; user-select: none;
-  }
+  .input-row label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; width: 14px; }
+  .num-input { background: transparent; border: none; color: var(--text); font-family: inherit; font-size: 13px; width: 100%; outline: none; font-variant-numeric: tabular-nums; }
+  .num-input::-webkit-outer-spin-button, .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .aspect-lock { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; font-size: 11px; color: var(--muted); cursor: pointer; user-select: none; }
   .aspect-lock input { cursor: pointer; accent-color: var(--accent); }
-
-  .slider-row {
-    display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px;
-  }
-  .slider-label {
-    display: flex; justify-content: space-between;
-    font-size: 11px; color: var(--muted);
-  }
+  .slider-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .slider-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
   .slider-label span:last-child { color: var(--accent); font-variant-numeric: tabular-nums; }
-  input[type="range"] {
-    -webkit-appearance: none; appearance: none;
-    width: 100%; height: 4px;
-    background: linear-gradient(to right, var(--accent) var(--val,50%), rgba(255,255,255,0.08) var(--val,50%));
-    border-radius: 2px; outline: none;
-  }
-  input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none; appearance: none;
-    width: 14px; height: 14px; background: var(--accent);
-    border-radius: 50%; cursor: pointer;
-    border: 2px solid #1a1410;
-    box-shadow: 0 0 8px var(--accent-glow);
-  }
-  input[type="range"]::-moz-range-thumb {
-    width: 14px; height: 14px; background: var(--accent);
-    border-radius: 50%; cursor: pointer; border: 2px solid #1a1410;
-  }
-
-  .btn {
-    -webkit-appearance: none; appearance: none; /* Strips native gray overlay */
-    padding: 9px 16px; border-radius: 8px;
-    border: 1px solid var(--border-2); background: var(--surface-2);
-    color: var(--text); cursor: pointer;
-    font-family: inherit; font-size: 13px; font-weight: 500;
-    display: inline-flex; align-items: center; gap: 8px;
-    transition: all 0.2s ease;
-    text-decoration: none;
-  }
-  .btn:hover {
-    background: rgba(255,255,255,0.05); border-color: rgba(233,184,114,0.3);
-    transform: translateY(-1px);
-  }
-  .btn:active {
-    transform: translateY(0);
-    background: rgba(255,255,255,0.02);
-  }
-  .btn:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px var(--accent);
-  }
-  
-  .btn-primary {
-    background: linear-gradient(135deg, var(--accent), var(--accent-2)) !important;
-    color: #1a1410 !important;
-    border: none; font-weight: 700;
-    box-shadow: 0 4px 16px var(--accent-glow);
-  }
-  .btn-primary:hover {
-    box-shadow: 0 6px 28px var(--accent-glow);
-    transform: translateY(-2px);
-  }
-  .btn-primary:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px var(--accent-glow);
-  }
-  .btn-primary:focus {
-    outline: none;
-    box-shadow: 0 4px 16px var(--accent-glow), 0 0 0 3px rgba(233, 184, 114, 0.5);
-  }
-
-  .footer-bar {
-    padding: 10px 24px;
-    background: rgba(20, 16, 12, 0.9);
-    border-top: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-    font-size: 11px; color: var(--muted);
-    font-variant-numeric: tabular-nums;
-    gap: 24px;
-    flex-wrap: wrap;
-  }
+  input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: linear-gradient(to right, var(--accent) var(--val,50%), rgba(255,255,255,0.08) var(--val,50%)); border-radius: 2px; outline: none; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; background: var(--accent); border-radius: 50%; cursor: pointer; border: 2px solid #1a1410; box-shadow: 0 0 8px var(--accent-glow); }
+  input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; background: var(--accent); border-radius: 50%; cursor: pointer; border: 2px solid #1a1410; }
+  input[type="color"] { -webkit-appearance: none; appearance: none; border: 1px solid var(--border-2); border-radius: 6px; padding: 2px; background: var(--surface-2); cursor: pointer; height: 30px; width: 100%; }
+  input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+  input[type="color"]::-webkit-color-swatch { border: none; border-radius: 4px; }
+  .btn { -webkit-appearance: none; appearance: none; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--border-2); background: var(--surface-2); color: var(--text); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s ease; text-decoration: none; }
+  .btn:hover { background: rgba(255,255,255,0.05); border-color: rgba(233,184,114,0.3); transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); background: rgba(255,255,255,0.02); }
+  .btn:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)) !important; color: #1a1410 !important; border: none; font-weight: 700; box-shadow: 0 4px 16px var(--accent-glow); }
+  .btn-primary:hover { box-shadow: 0 6px 28px var(--accent-glow); transform: translateY(-2px); }
+  .btn-primary:active { transform: translateY(0); box-shadow: 0 2px 8px var(--accent-glow); }
+  .btn-primary:focus { outline: none; box-shadow: 0 4px 16px var(--accent-glow), 0 0 0 3px rgba(233, 184, 114, 0.5); }
+  .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+  .btn-group .btn { padding: 7px; font-size: 12px; justify-content: center; }
+  .btn-group .btn.active { background: rgba(233, 184, 114, 0.12); color: var(--accent); border-color: rgba(233, 184, 114, 0.3); }
+  .footer-bar { padding: 10px 24px; background: rgba(20, 16, 12, 0.9); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; gap: 24px; flex-wrap: wrap; }
   .footer-left { display: flex; flex-direction: column; gap: 4px; }
   .footer-statuses { display: flex; gap: 18px; flex-wrap: wrap; }
   .status-item { display: flex; align-items: center; gap: 6px; }
-  .status-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--accent); box-shadow: 0 0 8px var(--accent-glow);
-    animation: pulse 2s ease-in-out infinite;
-  }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); animation: pulse 2s ease-in-out infinite; }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
   .footer-copy { text-align: right; font-size: 11px; }
-
-  .toast-container {
-    position: fixed; top: 80px; right: 24px;
-    z-index: 1000; display: flex; flex-direction: column; gap: 8px;
-    pointer-events: none;
-  }
-  .toast {
-    background: rgba(28, 24, 20, 0.95);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--border-2);
-    border-left: 3px solid var(--accent);
-    padding: 12px 18px; border-radius: 8px;
-    color: var(--text); font-size: 13px;
-    display: flex; align-items: center; gap: 10px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-    animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    min-width: 240px; max-width: 360px;
-  }
-  @keyframes toastIn {
-    from { transform: translateX(120%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-  }
+  .toast-container { position: fixed; top: 80px; right: 24px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .toast { background: rgba(28, 24, 20, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--border-2); border-left: 3px solid var(--accent); padding: 12px 18px; border-radius: 8px; color: var(--text); font-size: 13px; display: flex; align-items: center; gap: 10px; box-shadow: 0 12px 40px rgba(0,0,0,0.5); animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); min-width: 240px; max-width: 360px; }
+  @keyframes toastIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
   .toast.out { animation: toastOut 0.3s ease forwards; }
   @keyframes toastOut { to { transform: translateX(120%); opacity: 0; } }
-
-  .canvas-card.drag-over::after {
-    content: 'Drop images to fill empty slots or add new layers';
-    position: absolute; inset: 8px;
-    background: rgba(233, 184, 114, 0.1);
-    border: 2px dashed var(--accent); border-radius: 4px;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--accent); font-family: 'Fraunces', serif; font-size: 22px;
-    z-index: 100; pointer-events: none;
-    padding: 20px; text-align: center;
-  }
-
-  @media (max-width: 1024px) {
-    .main-grid { grid-template-columns: 64px 1fr 280px; }
-  }
-  @media (max-width: 768px) {
-    .main-grid { grid-template-columns: 56px 1fr; }
-    .right-panel { display: none; }
-    .footer-bar { flex-direction: column; gap: 8px; align-items: flex-start; }
-    .footer-copy { text-align: left; }
-    .header { gap: 8px; }
-    .btn { padding: 8px 12px; font-size: 12px; }
-  }
+  .canvas-card.drag-over::after { content: 'Drop images to add as layers'; position: absolute; inset: 8px; background: rgba(233, 184, 114, 0.1); border: 2px dashed var(--accent); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--accent); font-family: 'Fraunces', serif; font-size: 22px; z-index: 100; pointer-events: none; padding: 20px; text-align: center; }
+  @media (max-width: 1024px) { .main-grid { grid-template-columns: 64px 1fr 280px; } }
+  @media (max-width: 768px) { .main-grid { grid-template-columns: 56px 1fr; } .right-panel { display: none; } .footer-bar { flex-direction: column; gap: 8px; align-items: flex-start; } .footer-copy { text-align: left; } .header { gap: 8px; } .btn { padding: 8px 12px; font-size: 12px; } }
 </style>
 </head>
 <body>
-<!-- Hidden input for loading templates -->
 <input type="file" id="projectInput" class="file-input" accept=".json,application/json">
 
 <div class="app-grid">
@@ -486,6 +151,7 @@
       <a href="https://github.com/chris1111/Workshop-Layered-Image-Studio" target="_blank" class="btn"><i class="fa-brands fa-github"></i> GitHub</a>
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <button class="btn" id="undoBtn"><i class="fa-solid fa-rotate-left"></i> Undo</button>
       <button class="btn" id="clearBtn"><i class="fa-solid fa-trash-can"></i> Clear</button>
       <button class="btn btn-primary" id="exportBtn"><i class="fa-solid fa-download"></i> Export PNG</button>
     </div>
@@ -494,22 +160,19 @@
   <div class="main-grid">
     <div class="tool-rail">
       <input type="file" id="fileInput" class="file-input" multiple accept="image/*">
-      
       <button class="tool-btn active" id="selectTool" title="Select & Move (V)"><i class="fa-solid fa-arrow-pointer"></i></button>
+      <button class="tool-btn" id="eraserTool" title="Eraser (E)"><i class="fa-solid fa-eraser"></i></button>
+      <button class="tool-btn" id="brushTool" title="Brush (B)"><i class="fa-solid fa-paintbrush"></i></button>
+      <button class="tool-btn" id="shapeTool" title="Shapes (S)"><i class="fa-solid fa-shapes"></i></button>
+      <button class="tool-btn" id="gradientTool" title="Gradient (G)"><i class="fa-solid fa-fill-drip"></i></button>
       <button class="tool-btn" id="addTool" title="Add Images (A)"><i class="fa-solid fa-plus"></i></button>
-      
       <div class="rail-divider"></div>
-      
       <button class="tool-btn" id="bringFrontBtn" title="Bring to Front"><i class="fa-solid fa-bring-forward"></i></button>
       <button class="tool-btn" id="sendBackBtn" title="Send to Back"><i class="fa-solid fa-send-backward"></i></button>
-      
       <div class="rail-divider"></div>
-      
       <button class="tool-btn" id="centerBtn" title="Center Layer"><i class="fa-solid fa-bullseye"></i></button>
       <button class="tool-btn" id="resetBtn" title="Reset Transform"><i class="fa-solid fa-rotate-left"></i></button>
-      
       <div class="rail-divider"></div>
-      
       <button class="tool-btn" id="duplicateBtn" title="Duplicate Layer"><i class="fa-solid fa-clone"></i></button>
       <button class="tool-btn" id="deleteBtn" title="Delete Layer"><i class="fa-solid fa-trash"></i></button>
     </div>
@@ -530,73 +193,109 @@
 
     <aside class="right-panel">
       <div class="panel-section">
-        <div class="panel-title">
-          <span>Layers</span>
-          <span id="layerCount" style="color:var(--accent);">0</span>
-        </div>
+        <div class="panel-title"><span>Layers</span><span id="layerCount" style="color:var(--accent);">0</span></div>
         <div class="layers-list" id="layersList">
           <div style="color:var(--muted);font-size:12px;text-align:center;padding:18px 0;font-style:italic;">No layers yet</div>
         </div>
       </div>
 
-      <!-- Templates Section -->
       <div class="panel-section" id="templateSection">
         <div class="panel-title"><span>Templates</span></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-          <button class="btn" id="saveProjectBtn" style="padding:7px;font-size:12px;justify-content:center;"><i class="fa-solid fa-floppy-disk"></i> Save</button>
-          <button class="btn" id="loadProjectBtn" style="padding:7px;font-size:12px;justify-content:center;"><i class="fa-solid fa-folder-open"></i> Load</button>
+        <div class="btn-group">
+          <button class="btn" id="saveProjectBtn"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+          <button class="btn" id="loadProjectBtn"><i class="fa-solid fa-folder-open"></i> Load</button>
         </div>
+      </div>
+
+      <div class="panel-section" id="paintPanel" style="display:none;">
+        <div class="panel-title"><span id="paintToolName">Tool Settings</span></div>
+        
+        <div id="sizeRow" class="slider-row">
+          <div class="slider-label"><span>Size</span><span id="sizeVal">40px</span></div>
+          <input type="range" id="sizeSlider" min="1" max="150" value="40">
+        </div>
+
+        <div id="brushSettings" style="display:none;">
+          <div class="slider-row">
+            <div class="slider-label"><span>Color</span></div>
+            <input type="color" id="brushColor" value="#e9b872">
+          </div>
+          <div class="slider-label"><span>Brush Shape</span></div>
+          <div class="btn-group">
+            <button class="btn active" id="brushRound"><i class="fa-solid fa-circle"></i> Circle</button>
+            <button class="btn" id="brushSquare"><i class="fa-solid fa-square"></i> Square</button>
+          </div>
+        </div>
+
+        <div id="shapeSettings" style="display:none;">
+          <div class="slider-row">
+            <div class="slider-label"><span>Fill Color</span></div>
+            <input type="color" id="shapeColor" value="#ff7849">
+          </div>
+          <div class="slider-label"><span>Shape Type</span></div>
+          <div class="btn-group">
+            <button class="btn active" id="shapeRect"><i class="fa-solid fa-square"></i> Rectangle</button>
+            <button class="btn" id="shapeCircle"><i class="fa-solid fa-circle"></i> Circle</button>
+          </div>
+        </div>
+
+        <div id="gradientSettings" style="display:none;">
+          <div class="slider-row">
+            <div class="slider-label"><span>Color 1</span></div>
+            <input type="color" id="gradColor1" value="#e9b872">
+          </div>
+          <div class="slider-row">
+            <div class="slider-label"><span>Color 2</span></div>
+            <input type="color" id="gradColor2" value="#ff7849">
+          </div>
+          <div class="slider-label"><span>Gradient Type</span></div>
+          <div class="btn-group">
+            <button class="btn active" id="gradLinear"><i class="fa-solid fa-arrow-right-long"></i> Linear</button>
+            <button class="btn" id="gradRadial"><i class="fa-solid fa-circle-dot"></i> Radial</button>
+          </div>
+          <button class="btn btn-primary" id="applyGradBtn" style="width:100%; margin-top:12px; justify-content:center;">
+            <i class="fa-solid fa-plus"></i> Create Gradient Layer
+          </button>
+        </div>
+
+        <button class="btn" id="resetEraserBtn" style="width:100%;padding:7px;font-size:12px;justify-content:center;margin-top:12px;">
+          <i class="fa-solid fa-rotate-left"></i> Restore Layer Original
+        </button>
       </div>
 
       <div class="panel-section" id="transformPanel" style="display:none;flex:1;overflow-y:auto;">
         <div class="panel-title"><span>Position & Size</span></div>
         <div class="input-grid">
-          <div class="input-row">
-            <label>X</label>
-            <input type="number" class="num-input" id="posX" value="0">
-          </div>
-          <div class="input-row">
-            <label>Y</label>
-            <input type="number" class="num-input" id="posY" value="0">
-          </div>
-          <div class="input-row">
-            <label>W</label>
-            <input type="number" class="num-input" id="sizeW" value="100">
-          </div>
-          <div class="input-row">
-            <label>H</label>
-            <input type="number" class="num-input" id="sizeH" value="100">
-          </div>
+          <div class="input-row"><label>X</label><input type="number" class="num-input" id="posX" value="0"></div>
+          <div class="input-row"><label>Y</label><input type="number" class="num-input" id="posY" value="0"></div>
+          <div class="input-row"><label>W</label><input type="number" class="num-input" id="sizeW" value="100"></div>
+          <div class="input-row"><label>H</label><input type="number" class="num-input" id="sizeH" value="100"></div>
         </div>
-        <label class="aspect-lock">
-          <input type="checkbox" id="lockAspect" checked>
-          Lock Aspect Ratio
-        </label>
-
+        <label class="aspect-lock"><input type="checkbox" id="lockAspect" checked> Lock Aspect Ratio</label>
+        
         <div class="panel-title" style="margin-top:20px;"><span>Transform</span></div>
-        <div class="slider-row">
-          <div class="slider-label"><span>Opacity</span><span id="opacityVal">100%</span></div>
-          <input type="range" id="opacitySlider" min="0" max="100" value="100">
+        <div class="slider-row"><div class="slider-label"><span>Opacity</span><span id="opacityVal">100%</span></div><input type="range" id="opacitySlider" min="0" max="100" value="100"></div>
+        <div class="slider-row"><div class="slider-label"><span>Scale</span><span id="scaleVal">100%</span></div><input type="range" id="scaleSlider" min="10" max="300" value="100"></div>
+        <div class="slider-row"><div class="slider-label"><span>Rotation</span><span id="rotateVal">0°</span></div><input type="range" id="rotateSlider" min="-180" max="180" value="0"></div>
+        
+        <div class="panel-title" style="margin-top:20px;"><span>Shadow</span></div>
+        <div class="input-grid">
+          <div class="input-row"><label>X</label><input type="number" class="num-input" id="shadowX" value="0"></div>
+          <div class="input-row"><label>Y</label><input type="number" class="num-input" id="shadowY" value="8"></div>
         </div>
-        <div class="slider-row">
-          <div class="slider-label"><span>Scale</span><span id="scaleVal">100%</span></div>
-          <input type="range" id="scaleSlider" min="10" max="300" value="100">
-        </div>
-        <div class="slider-row">
-          <div class="slider-label"><span>Rotation</span><span id="rotateVal">0°</span></div>
-          <input type="range" id="rotateSlider" min="-180" max="180" value="0">
-        </div>
-
+        <div class="slider-row" style="margin-top:8px;"><div class="slider-label"><span>Blur</span><span id="shadowBlurVal">14px</span></div><input type="range" id="shadowBlur" min="0" max="50" value="14"></div>
+        <div class="slider-row"><div class="slider-label"><span>Opacity</span><span id="shadowOpacityVal">45%</span></div><input type="range" id="shadowOpacity" min="0" max="100" value="45"></div>
+        <div class="slider-row"><div class="slider-label"><span>Color</span></div><input type="color" id="shadowColor" value="#000000"></div>
+        
         <div class="panel-title" style="margin-top:20px;"><span>Layer Order</span></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-          <button class="btn" id="frontBtn" style="padding:7px;font-size:12px;justify-content:center;"><i class="fa-solid fa-angles-up"></i> Front</button>
-          <button class="btn" id="backBtn" style="padding:7px;font-size:12px;justify-content:center;"><i class="fa-solid fa-angles-down"></i> Back</button>
+        <div class="btn-group">
+          <button class="btn" id="frontBtn"><i class="fa-solid fa-angles-up"></i> Front</button>
+          <button class="btn" id="backBtn"><i class="fa-solid fa-angles-down"></i> Back</button>
         </div>
-
         <div class="panel-title" style="margin-top:20px;"><span>Actions</span></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-          <button class="btn" id="dupBtn2" style="padding:7px;font-size:12px;justify-content:center;"><i class="fa-solid fa-clone"></i> Duplicate</button>
-          <button class="btn" id="delBtn2" style="padding:7px;font-size:12px;justify-content:center;color:var(--danger);"><i class="fa-solid fa-trash"></i> Delete</button>
+        <div class="btn-group">
+          <button class="btn" id="dupBtn2"><i class="fa-solid fa-clone"></i> Duplicate</button>
+          <button class="btn" id="delBtn2" style="color:var(--danger);"><i class="fa-solid fa-trash"></i> Delete</button>
         </div>
       </div>
     </aside>
@@ -620,18 +319,15 @@
 
 <script>
 const state = {
-  layers: [],
-  selectedId: null,
-  zCounter: 1,
-  layerIdCounter: 0,
-  isDragging: false,
-  isResizing: false,
-  isRotating: false,
-  dragStart: { x: 0, y: 0, lx: 0, ly: 0 },
-  resizeHandle: null,
-  resizeStart: null,
-  rotateStart: null,
-  lockAspect: true
+  layers: [], selectedId: null, zCounter: 1, layerIdCounter: 0,
+  isDragging: false, isResizing: false, isRotating: false,
+  isErasing: false, isDrawing: false, isDrawingShape: false,
+  dragStart: { x: 0, y: 0, lx: 0, ly: 0 }, resizeHandle: null, resizeStart: null, rotateStart: null,
+  lockAspect: true, activeTool: 'select', toolSize: 40,
+  brushColor: '#e9b872', brushShape: 'round',
+  shapeColor: '#ff7849', shapeType: 'rect',
+  gradColor1: '#e9b872', gradColor2: '#ff7849', gradType: 'linear',
+  history: [], lastBrushPoint: { x: 0, y: 0 }, drawStart: { x: 0, y: 0 }, canvasSnapshot: null
 };
 
 const canvasCard = document.getElementById('canvasCard');
@@ -641,6 +337,7 @@ const projectInput = document.getElementById('projectInput');
 const layersList = document.getElementById('layersList');
 const layerCount = document.getElementById('layerCount');
 const transformPanel = document.getElementById('transformPanel');
+const paintPanel = document.getElementById('paintPanel');
 const toastContainer = document.getElementById('toastContainer');
 
 function toast(message, icon = 'fa-circle-info') {
@@ -648,59 +345,217 @@ function toast(message, icon = 'fa-circle-info') {
   t.className = 'toast';
   t.innerHTML = `<i class="fa-solid ${icon}" style="color:var(--accent);"></i><span>${message}</span>`;
   toastContainer.appendChild(t);
-  setTimeout(() => {
-    t.classList.add('out');
-    setTimeout(() => t.remove(), 300);
-  }, 2600);
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, 2600);
 }
+
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function saveHistory() {
+  const snap = state.layers.map(l => {
+    let canvasData = null;
+    if (l.canvasEl) { try { canvasData = l.canvasEl.toDataURL(); } catch(e) {} }
+    return { id: l.id, src: l.src, name: l.name, x: l.x, y: l.y, w: l.w, h: l.h, rotation: l.rotation, opacity: l.opacity, scale: l.scale, z: l.z, aspect: l.aspect, hasCanvas: !!l.canvasEl, canvasData: canvasData, shadow: l.shadow };
+  });
+  state.history.push(snap);
+  if (state.history.length > 20) state.history.shift();
+}
+
+async function restoreFromHistory(snap) {
+  state.layers.forEach(l => { const el = document.querySelector(`[data-layer-id="${l.id}"]`); if (el) el.remove(); });
+  state.layers = []; state.selectedId = null; state.zCounter = 0; state.layerIdCounter = 0;
+  for (const l of snap) {
+    const img = new Image(); img.crossOrigin = 'anonymous';
+    await new Promise(resolve => {
+      img.onload = async () => {
+        const newLayer = { ...l, imgEl: img, canvasEl: null, canvasCtx: null };
+        delete newLayer.canvasData; delete newLayer.hasCanvas;
+        state.layers.push(newLayer); renderLayer(newLayer); resolve();
+      };
+      img.onerror = () => resolve(); img.src = l.src;
+    });
+  }
+  for (let i = 0; i < state.layers.length; i++) {
+    const l = state.layers[i]; const snapData = snap.find(s => s.id === l.id);
+    if (snapData && snapData.hasCanvas && snapData.canvasData) {
+      await new Promise(resolve => {
+        const cImg = new Image();
+        cImg.onload = () => {
+          l.canvasEl = document.createElement('canvas'); l.canvasEl.width = l.w; l.canvasEl.height = l.h;
+          l.canvasCtx = l.canvasEl.getContext('2d'); l.canvasCtx.drawImage(cImg, 0, 0, l.w, l.h);
+          const el = document.querySelector(`[data-layer-id="${l.id}"]`);
+          const oldCanvas = el.querySelector('canvas'); if (oldCanvas) oldCanvas.remove();
+          l.canvasEl.style.width = '100%'; l.canvasEl.style.height = '100%';
+          el.appendChild(l.canvasEl); resolve();
+        };
+        cImg.src = snapData.canvasData;
+      });
+    }
+  }
+  updateUI();
+  if (state.layers.length > 0) { const topLayer = [...state.layers].sort((a, b) => b.z - a.z)[0]; selectLayer(topLayer.id); }
+}
+
+document.getElementById('undoBtn').addEventListener('click', async () => {
+  if (state.history.length === 0) { toast('Nothing to undo', 'fa-circle-info'); return; }
+  document.getElementById('statusText').textContent = 'Undoing...';
+  const snap = state.history.pop(); await restoreFromHistory(snap);
+  document.getElementById('statusText').textContent = 'Ready';
+  toast('Undo successful', 'fa-rotate-left');
+});
+
+function getLayerCanvas(layer) {
+  if (!layer.canvasEl) {
+    layer.canvasEl = document.createElement('canvas');
+    layer.canvasEl.width = layer.w; layer.canvasEl.height = layer.h;
+    layer.canvasCtx = layer.canvasEl.getContext('2d');
+    layer.canvasCtx.drawImage(layer.imgEl, 0, 0, layer.w, layer.h);
+    const el = document.querySelector(`[data-layer-id="${layer.id}"]`);
+    const oldImg = el.querySelector('img'); if (oldImg) oldImg.remove();
+    layer.canvasEl.style.width = '100%'; layer.canvasEl.style.height = '100%';
+    el.appendChild(layer.canvasEl);
+  }
+  return layer.canvasEl;
+}
+
+function getLocalCoords(layer, clientX, clientY) {
+  const el = document.querySelector(`[data-layer-id="${layer.id}"]`);
+  const rect = el.getBoundingClientRect();
+  return { x: (clientX - rect.left) * (layer.w / rect.width), y: (clientY - rect.top) * (layer.h / rect.height) };
+}
+
+function eraseAtPos(clientX, clientY) {
+  const layer = state.layers.find(l => l.id === state.selectedId);
+  if (!layer || !layer.imgEl) return;
+  const ctx = getLayerCanvas(layer).getContext('2d');
+  const { x, y } = getLocalCoords(layer, clientX, clientY);
+  ctx.save(); ctx.globalCompositeOperation = 'destination-out';
+  ctx.beginPath(); ctx.arc(x, y, state.toolSize / 2, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+}
+
+function drawBrushDot(layer, x, y) {
+  const ctx = getLayerCanvas(layer).getContext('2d');
+  ctx.fillStyle = state.brushColor;
+  const r = state.toolSize / 2;
+  if (state.brushShape === 'square') { ctx.fillRect(x - r, y - r, state.toolSize, state.toolSize); }
+  else { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
+}
+
+function drawBrushLine(layer, from, to) {
+  const ctx = getLayerCanvas(layer).getContext('2d');
+  ctx.strokeStyle = state.brushColor; ctx.lineWidth = state.toolSize;
+  ctx.lineCap = state.brushShape; ctx.lineJoin = state.brushShape;
+  ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke();
+}
+
+function drawShapePreview(layer, from, to) {
+  const ctx = getLayerCanvas(layer).getContext('2d');
+  ctx.putImageData(state.canvasSnapshot, 0, 0);
+  ctx.fillStyle = state.shapeColor;
+  if (state.shapeType === 'rect') { ctx.fillRect(from.x, from.y, to.x - from.x, to.y - from.y); }
+  else {
+    const cx = (from.x + to.x) / 2, cy = (from.y + to.y) / 2;
+    const rx = Math.abs(to.x - from.x) / 2, ry = Math.abs(to.y - from.y) / 2;
+    ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+function createGradientLayer() {
+  const w = 800, h = 600;
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = w; tempCanvas.height = h;
+  const ctx = tempCanvas.getContext('2d');
+  
+  if (state.gradType === 'linear') {
+    const grad = ctx.createLinearGradient(0, 0, w, h);
+    grad.addColorStop(0, state.gradColor1);
+    grad.addColorStop(1, state.gradColor2);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+  } else {
+    const cx = w / 2, cy = h / 2;
+    const r = Math.min(w, h) / 2;
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    grad.addColorStop(0, state.gradColor1);
+    grad.addColorStop(1, state.gradColor2);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  const dataUrl = tempCanvas.toDataURL('image/png');
+  addImageLayer(dataUrl, 'Gradient Layer');
+  toast('Gradient layer added', 'fa-fill-drip');
+}
+
+document.addEventListener('mousemove', (e) => {
+  updateCursorPos(e);
+  if (state.activeTool === 'eraser' && state.isErasing) { eraseAtPos(e.clientX, e.clientY); }
+  else if (state.activeTool === 'brush' && state.isDrawing) {
+    const layer = state.layers.find(l => l.id === state.selectedId);
+    if (layer) { const coords = getLocalCoords(layer, e.clientX, e.clientY); drawBrushLine(layer, state.lastBrushPoint, coords); state.lastBrushPoint = coords; }
+  } else if (state.activeTool === 'shape' && state.isDrawingShape) {
+    const layer = state.layers.find(l => l.id === state.selectedId);
+    if (layer) { const coords = getLocalCoords(layer, e.clientX, e.clientY); drawShapePreview(layer, state.drawStart, coords); }
+  }
+  
+  if (state.isDragging) {
+    const layer = state.layers.find(l => l.id === state.selectedId);
+    if (!layer) return;
+    layer.x = state.dragStart.lx + (e.clientX - state.dragStart.x);
+    layer.y = state.dragStart.ly + (e.clientY - state.dragStart.y);
+    updateLayerTransform(layer); updatePositionInputs(layer);
+  } else if (state.isResizing) {
+    const layer = state.layers.find(l => l.id === state.selectedId); if (!layer) return;
+    const dx = e.clientX - state.resizeStart.x, dy = e.clientY - state.resizeStart.y;
+    const h = state.resizeHandle, rs = state.resizeStart; let newW = rs.w, newH = rs.h;
+    if (h === 'br') { newW = Math.max(30, rs.w + dx * 2); newH = Math.max(30, rs.h + dy * 2); }
+    else if (h === 'bl') { newW = Math.max(30, rs.w - dx * 2); newH = Math.max(30, rs.h + dy * 2); }
+    else if (h === 'tr') { newW = Math.max(30, rs.w + dx * 2); newH = Math.max(30, rs.h - dy * 2); }
+    else if (h === 'tl') { newW = Math.max(30, rs.w - dx * 2); newH = Math.max(30, rs.h - dy * 2); }
+    if (state.lockAspect) newH = newW / rs.aspect;
+    layer.w = newW; layer.h = newH; layer.x = rs.lx + (rs.w - newW) / 2; layer.y = rs.ly + (rs.h - newH) / 2;
+    updateLayerTransform(layer); updateSizeInputs(layer);
+  } else if (state.isRotating) {
+    const layer = state.layers.find(l => l.id === state.selectedId); if (!layer) return;
+    const rs = state.rotateStart; const angle = Math.atan2(e.clientY - rs.cy, e.clientX - rs.cx);
+    let deg = rs.initialRotation + (angle - rs.startAngle) * (180 / Math.PI);
+    if (e.shiftKey) deg = Math.round(deg / 15) * 15;
+    layer.rotation = deg; updateLayerTransform(layer); updateSliderValues(layer);
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  if (state.isErasing) state.isErasing = false;
+  if (state.isDrawing) state.isDrawing = false;
+  if (state.isDrawingShape) { state.isDrawingShape = false; state.canvasSnapshot = null; }
+  if (state.isDragging || state.isResizing || state.isRotating) {
+    state.isDragging = false; state.isResizing = false; state.isRotating = false; state.resizeHandle = null;
+    document.body.style.cursor = '';
+    document.querySelectorAll('.layer.dragging').forEach(el => el.classList.remove('dragging'));
+  }
+});
 
 function addImageLayer(src, name, targetSlot = null) {
   return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
+    const img = new Image(); img.crossOrigin = 'anonymous';
     img.onload = () => {
-      const cardRect = canvasCard.getBoundingClientRect();
-      const cw = cardRect.width, ch = cardRect.height;
-      
-      let w = img.naturalWidth;
-      let h = img.naturalHeight;
-
-      let layer;
-
-      if (targetSlot) {
-        targetSlot.src = src;
-        targetSlot.imgEl = img;
-        targetSlot.name = name || targetSlot.name;
-        layer = targetSlot;
-      } else {
+      const cardRect = canvasCard.getBoundingClientRect(); const cw = cardRect.width, ch = cardRect.height;
+      let w = img.naturalWidth, h = img.naturalHeight; let layer;
+      if (targetSlot) { targetSlot.src = src; targetSlot.imgEl = img; targetSlot.name = name || targetSlot.name; layer = targetSlot; }
+      else {
         const offset = (state.layers.length % 5) * 22;
-        const x = (cw - w) / 2 + offset - 40;
-        const y = (ch - h) / 2 + offset - 40;
-
-        layer = {
-          id: ++state.layerIdCounter,
-          src,
-          name: name || `Layer ${state.layerIdCounter}`,
-          x, y, w, h,
-          rotation: 0,
-          opacity: 1,
-          scale: 1,
-          z: ++state.zCounter,
-          imgEl: img,
-          aspect: w / h
-        };
+        layer = { id: ++state.layerIdCounter, src, name: name || `Layer ${state.layerIdCounter}`, x: (cw - w) / 2 + offset - 40, y: (ch - h) / 2 + offset - 40, w, h, rotation: 0, opacity: 1, scale: 1, z: ++state.zCounter, imgEl: img, aspect: w / h, canvasEl: null, canvasCtx: null, shadow: { x: 0, y: 8, blur: 14, opacity: 0.45, color: '#000000' } };
         state.layers.push(layer);
       }
-      
-      renderLayer(layer);
-      selectLayer(layer.id);
-      updateUI();
-      resolve(layer);
+      renderLayer(layer); selectLayer(layer.id); updateUI(); resolve(layer);
     };
-    img.onerror = () => {
-      toast('Failed to load image', 'fa-triangle-exclamation');
-      resolve(null);
-    };
+    img.onerror = () => { toast('Failed to load image', 'fa-triangle-exclamation'); resolve(null); };
     img.src = src;
   });
 }
@@ -708,207 +563,81 @@ function addImageLayer(src, name, targetSlot = null) {
 function renderLayer(layer) {
   let el = document.querySelector(`[data-layer-id="${layer.id}"]`);
   if (!el) {
-    el = document.createElement('div');
-    el.className = 'layer';
-    el.dataset.layerId = layer.id;
-    el.innerHTML = `
-      <img draggable="false">
-      <div class="layer-handle handle-tl" data-handle="tl"></div>
-      <div class="layer-handle handle-tr" data-handle="tr"></div>
-      <div class="layer-handle handle-bl" data-handle="bl"></div>
-      <div class="layer-handle handle-br" data-handle="br"></div>
-      <div class="layer-handle handle-rot" data-handle="rot"></div>
-    `;
-    canvasCard.appendChild(el);
-    attachLayerEvents(el, layer);
+    el = document.createElement('div'); el.className = 'layer'; el.dataset.layerId = layer.id;
+    el.innerHTML = `<div class="layer-handle handle-tl" data-handle="tl"></div><div class="layer-handle handle-tr" data-handle="tr"></div><div class="layer-handle handle-bl" data-handle="bl"></div><div class="layer-handle handle-br" data-handle="br"></div><div class="layer-handle handle-rot" data-handle="rot"></div>`;
+    canvasCard.appendChild(el); attachLayerEvents(el, layer);
   }
-  
-  const img = el.querySelector('img');
+  const oldCanvas = el.querySelector('canvas'); if (oldCanvas) oldCanvas.remove();
+  const oldImg = el.querySelector('img'); if (oldImg) oldImg.remove();
   if (layer.imgEl) {
-    img.src = layer.src;
+    if (layer.canvasEl) { el.appendChild(layer.canvasEl); } else { const img = document.createElement('img'); img.draggable = false; el.appendChild(img); img.src = layer.src; }
     el.classList.remove('placeholder');
-  } else {
-    img.removeAttribute('src');
-    el.classList.add('placeholder');
-  }
-  
+  } else { el.classList.add('placeholder'); }
   updateLayerTransform(layer);
 }
 
 function updateLayerTransform(layer) {
-  const el = document.querySelector(`[data-layer-id="${layer.id}"]`);
-  if (!el) return;
-  el.style.left = layer.x + 'px';
-  el.style.top = layer.y + 'px';
-  el.style.width = layer.w + 'px';
-  el.style.height = layer.h + 'px';
-  el.style.transform = `rotate(${layer.rotation}deg) scale(${layer.scale})`;
-  el.style.opacity = layer.opacity;
-  el.style.zIndex = layer.z;
+  const el = document.querySelector(`[data-layer-id="${layer.id}"]`); if (!el) return;
+  el.style.left = layer.x + 'px'; el.style.top = layer.y + 'px'; el.style.width = layer.w + 'px'; el.style.height = layer.h + 'px';
+  el.style.transform = `rotate(${layer.rotation}deg) scale(${layer.scale})`; el.style.opacity = layer.opacity; el.style.zIndex = layer.z;
+  // Apply Custom Shadow
+  const s = layer.shadow;
+  el.style.filter = `drop-shadow(${s.x}px ${s.y}px ${s.blur}px ${hexToRgba(s.color, s.opacity)})`;
 }
 
 function attachLayerEvents(el, layer) {
   el.addEventListener('mousedown', (e) => {
-    e.stopPropagation();
-    selectLayer(layer.id);
+    e.stopPropagation(); selectLayer(layer.id);
+    if (!layer.imgEl) return;
+    
+    if (state.activeTool === 'eraser') { saveHistory(); state.isErasing = true; eraseAtPos(e.clientX, e.clientY); return; }
+    if (state.activeTool === 'brush') {
+      saveHistory(); state.isDrawing = true;
+      const coords = getLocalCoords(layer, e.clientX, e.clientY);
+      state.lastBrushPoint = coords; drawBrushDot(layer, coords.x, coords.y); return;
+    }
+    if (state.activeTool === 'shape') {
+      saveHistory(); state.isDrawingShape = true;
+      state.drawStart = getLocalCoords(layer, e.clientX, e.clientY);
+      const ctx = getLayerCanvas(layer).getContext('2d');
+      state.canvasSnapshot = ctx.getImageData(0, 0, layer.w, layer.h); return;
+    }
+    
     const target = e.target;
     if (target.classList.contains('layer-handle')) {
       const handle = target.dataset.handle;
-      if (handle === 'rot') startRotate(e, layer);
-      else startResize(e, layer, handle);
-    } else {
-      startDrag(e, layer);
-    }
+      if (handle === 'rot') startRotate(e, layer); else startResize(e, layer, handle);
+    } else { startDrag(e, layer); }
   });
-  el.addEventListener('touchstart', (e) => {
-    e.stopPropagation();
-    selectLayer(layer.id);
-    const t = e.touches[0];
-    const target = e.target;
-    const fake = { clientX: t.clientX, clientY: t.clientY, stopPropagation: ()=>{}, preventDefault: ()=>{} };
-    if (target.classList.contains('layer-handle')) {
-      const handle = target.dataset.handle;
-      if (handle === 'rot') startRotate(fake, layer, e);
-      else startResize(fake, layer, handle, e);
-    } else {
-      startDrag(fake, layer, e);
-    }
-  }, { passive: true });
 }
 
-function startDrag(e, layer, touchEvent) {
+function startDrag(e, layer) {
   if (!layer.imgEl) return;
-  state.isDragging = true;
-  state.dragStart = { x: e.clientX, y: e.clientY, lx: layer.x, ly: layer.y };
+  state.isDragging = true; state.dragStart = { x: e.clientX, y: e.clientY, lx: layer.x, ly: layer.y };
   const el = document.querySelector(`[data-layer-id="${layer.id}"]`);
-  if (el) el.classList.add('dragging');
-  document.body.style.cursor = 'grabbing';
-  if (touchEvent) e.preventDefault?.();
+  if (el) el.classList.add('dragging'); document.body.style.cursor = 'grabbing';
 }
 
-function startResize(e, layer, handle, touchEvent) {
-  state.isResizing = true;
-  state.resizeHandle = handle;
-  state.resizeStart = {
-    x: e.clientX, y: e.clientY,
-    w: layer.w, h: layer.h, lx: layer.x, ly: layer.y,
-    aspect: layer.w / layer.h,
-  };
-  if (touchEvent) e.preventDefault?.();
+function startResize(e, layer, handle) {
+  saveHistory(); state.isResizing = true; state.resizeHandle = handle;
+  state.resizeStart = { x: e.clientX, y: e.clientY, w: layer.w, h: layer.h, lx: layer.x, ly: layer.y, aspect: layer.w / layer.h };
 }
 
-function startRotate(e, layer, touchEvent) {
-  state.isRotating = true;
+function startRotate(e, layer) {
+  saveHistory(); state.isRotating = true;
   const el = document.querySelector(`[data-layer-id="${layer.id}"]`);
   const rect = el.getBoundingClientRect();
-  const cx = rect.left + rect.width / 2;
-  const cy = rect.top + rect.height / 2;
-  state.rotateStart = {
-    cx, cy,
-    startAngle: Math.atan2(e.clientY - cy, e.clientX - cx),
-    initialRotation: layer.rotation,
-  };
-  if (touchEvent) e.preventDefault?.();
-}
-
-document.addEventListener('mousemove', (e) => {
-  updateCursorPos(e);
-  if (state.isDragging) {
-    const layer = state.layers.find(l => l.id === state.selectedId);
-    if (!layer) return;
-    layer.x = state.dragStart.lx + (e.clientX - state.dragStart.x);
-    layer.y = state.dragStart.ly + (e.clientY - state.dragStart.y);
-    updateLayerTransform(layer);
-    updatePositionInputs(layer);
-  } else if (state.isResizing) {
-    const layer = state.layers.find(l => l.id === state.selectedId);
-    if (!layer) return;
-    const dx = e.clientX - state.resizeStart.x;
-    const dy = e.clientY - state.resizeStart.y;
-    const h = state.resizeHandle;
-    const rs = state.resizeStart;
-    let newW = rs.w, newH = rs.h;
-
-    if (h === 'br') {
-      newW = Math.max(30, rs.w + dx * 2);
-      newH = Math.max(30, rs.h + dy * 2);
-    } else if (h === 'bl') {
-      newW = Math.max(30, rs.w - dx * 2);
-      newH = Math.max(30, rs.h + dy * 2);
-    } else if (h === 'tr') {
-      newW = Math.max(30, rs.w + dx * 2);
-      newH = Math.max(30, rs.h - dy * 2);
-    } else if (h === 'tl') {
-      newW = Math.max(30, rs.w - dx * 2);
-      newH = Math.max(30, rs.h - dy * 2);
-    }
-    
-    if (state.lockAspect) {
-      newH = newW / rs.aspect;
-    }
-    
-    layer.w = newW;
-    layer.h = newH;
-    layer.x = rs.lx + (rs.w - newW) / 2;
-    layer.y = rs.ly + (rs.h - newH) / 2;
-    updateLayerTransform(layer);
-    updateSizeInputs(layer);
-  } else if (state.isRotating) {
-    const layer = state.layers.find(l => l.id === state.selectedId);
-    if (!layer) return;
-    const rs = state.rotateStart;
-    const angle = Math.atan2(e.clientY - rs.cy, e.clientX - rs.cx);
-    let deg = rs.initialRotation + (angle - rs.startAngle) * (180 / Math.PI);
-    if (e.shiftKey) deg = Math.round(deg / 15) * 15;
-    layer.rotation = deg;
-    updateLayerTransform(layer);
-    updateSliderValues(layer);
-  }
-});
-
-document.addEventListener('touchmove', (e) => {
-  if (!e.touches[0]) return;
-  if (state.isDragging || state.isResizing || state.isRotating) {
-    e.preventDefault();
-    const t = e.touches[0];
-    document.dispatchEvent(new MouseEvent('mousemove', { clientX: t.clientX, clientY: t.clientY, shiftKey: e.shiftKey }));
-  }
-}, { passive: false });
-
-document.addEventListener('mouseup', endInteraction);
-document.addEventListener('touchend', endInteraction);
-
-function endInteraction() {
-  state.isDragging = false;
-  state.isResizing = false;
-  state.isRotating = false;
-  state.resizeHandle = null;
-  document.body.style.cursor = '';
-  document.querySelectorAll('.layer.dragging').forEach(el => el.classList.remove('dragging'));
+  state.rotateStart = { cx: rect.left + rect.width / 2, cy: rect.top + rect.height / 2, startAngle: Math.atan2(e.clientY - (rect.top + rect.height / 2), e.clientX - (rect.left + rect.width / 2)), initialRotation: layer.rotation };
 }
 
 canvasCard.addEventListener('mousedown', (e) => {
-  if (e.target === canvasCard || e.target === emptyState || emptyState.contains(e.target)) {
-    selectLayer(null);
-  }
+  if (e.target === canvasCard || e.target === emptyState || emptyState.contains(e.target)) { selectLayer(null); }
 });
-
-function updateCursorPos(e) {
-  const rect = canvasCard.getBoundingClientRect();
-  if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
-    const x = Math.round(e.clientX - rect.left);
-    const y = Math.round(e.clientY - rect.top);
-    document.getElementById('cursorPos').textContent = `${x}, ${y}`;
-  }
-}
 
 function selectLayer(id) {
   state.selectedId = id;
-  document.querySelectorAll('.layer').forEach(el => {
-    el.classList.toggle('selected', parseInt(el.dataset.layerId) === id);
-  });
-  updateLayerList();
-  updateTransformPanel();
+  document.querySelectorAll('.layer').forEach(el => { el.classList.toggle('selected', parseInt(el.dataset.layerId) === id); });
+  updateLayerList(); updateTransformPanel();
 }
 
 function updateSliderValues(layer) {
@@ -918,331 +647,162 @@ function updateSliderValues(layer) {
   document.getElementById('scaleVal').textContent = Math.round(layer.scale * 100) + '%';
   document.getElementById('rotateSlider').value = Math.round(layer.rotation);
   document.getElementById('rotateVal').textContent = Math.round(layer.rotation) + '°';
-  updateSliderFill('opacitySlider');
-  updateSliderFill('scaleSlider');
-  updateSliderFill('rotateSlider');
+  
+  // Shadow Values
+  document.getElementById('shadowX').value = layer.shadow.x;
+  document.getElementById('shadowY').value = layer.shadow.y;
+  document.getElementById('shadowBlur').value = layer.shadow.blur;
+  document.getElementById('shadowBlurVal').textContent = layer.shadow.blur + 'px';
+  document.getElementById('shadowOpacity').value = Math.round(layer.shadow.opacity * 100);
+  document.getElementById('shadowOpacityVal').textContent = Math.round(layer.shadow.opacity * 100) + '%';
+  document.getElementById('shadowColor').value = layer.shadow.color;
+  
+  updateSliderFill('opacitySlider'); updateSliderFill('scaleSlider'); updateSliderFill('rotateSlider');
+  updateSliderFill('shadowBlur'); updateSliderFill('shadowOpacity');
 }
 
 function updatePositionInputs(layer) {
   if (state.selectedId !== layer.id) return;
-  const posX = document.getElementById('posX');
-  const posY = document.getElementById('posY');
+  const posX = document.getElementById('posX'), posY = document.getElementById('posY');
   if (document.activeElement !== posX) posX.value = Math.round(layer.x);
   if (document.activeElement !== posY) posY.value = Math.round(layer.y);
 }
 
 function updateSizeInputs(layer) {
   if (state.selectedId !== layer.id) return;
-  const sizeW = document.getElementById('sizeW');
-  const sizeH = document.getElementById('sizeH');
+  const sizeW = document.getElementById('sizeW'), sizeH = document.getElementById('sizeH');
   if (document.activeElement !== sizeW) sizeW.value = Math.round(layer.w);
   if (document.activeElement !== sizeH) sizeH.value = Math.round(layer.h);
 }
 
 function updateSliderFill(id) {
-  const s = document.getElementById(id);
-  const min = parseFloat(s.min), max = parseFloat(s.max), val = parseFloat(s.value);
-  const pct = ((val - min) / (max - min)) * 100;
-  s.style.setProperty('--val', pct + '%');
+  const s = document.getElementById(id); const min = parseFloat(s.min), max = parseFloat(s.max), val = parseFloat(s.value);
+  const pct = ((val - min) / (max - min)) * 100; s.style.setProperty('--val', pct + '%');
 }
 
 function updateTransformPanel() {
   const layer = state.layers.find(l => l.id === state.selectedId);
   if (layer) {
     transformPanel.style.display = 'block';
-    updateSliderValues(layer);
-    updatePositionInputs(layer);
-    updateSizeInputs(layer);
+    updateSliderValues(layer); updatePositionInputs(layer); updateSizeInputs(layer);
     document.getElementById('layerInfo').textContent = layer.name;
-  } else {
-    transformPanel.style.display = 'none';
-    document.getElementById('layerInfo').textContent = 'none';
-  }
+  } else { transformPanel.style.display = 'none'; document.getElementById('layerInfo').textContent = 'none'; }
 }
 
 function updateLayerList() {
   if (state.layers.length === 0) {
     layersList.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:18px 0;font-style:italic;">No layers yet</div>';
-    layerCount.textContent = '0';
-    return;
+    layerCount.textContent = '0'; return;
   }
   layerCount.textContent = state.layers.length;
   const sorted = [...state.layers].sort((a, b) => b.z - a.z);
   layersList.innerHTML = sorted.map((layer, idx) => {
-    const isFirst = idx === 0;
-    const isLast = idx === sorted.length - 1;
-    const isEmpty = !layer.imgEl;
-    const thumbBg = isEmpty ? '' : `background-image:url('${layer.src}')`;
+    const isFirst = idx === 0, isLast = idx === sorted.length - 1, isEmpty = !layer.imgEl;
+    let thumbSrc = '';
+    if (!isEmpty) { if (layer.canvasEl) { try { thumbSrc = layer.canvasEl.toDataURL(); } catch(e) { thumbSrc = layer.src; } } else thumbSrc = layer.src; }
+    const thumbBg = isEmpty ? '' : `background-image:url('${thumbSrc}')`;
     const thumbClass = isEmpty ? 'layer-thumb empty' : 'layer-thumb';
-    
     return `
     <div class="layer-item ${layer.id === state.selectedId ? 'selected' : ''}" data-id="${layer.id}">
-      <div class="${thumbClass}" style="${thumbBg}">
-        ${isEmpty ? '<i class="fa-solid fa-image"></i>' : ''}
-      </div>
+      <div class="${thumbClass}" style="${thumbBg}">${isEmpty ? '<i class="fa-solid fa-image"></i>' : ''}</div>
       <div class="layer-name">${layer.name}</div>
       <div class="layer-actions">
-        <button class="icon-btn" data-action="up" data-id="${layer.id}" title="Move up" ${isFirst ? 'disabled' : ''}>
-          <i class="fa-solid fa-chevron-up"></i>
-        </button>
-        <button class="icon-btn" data-action="down" data-id="${layer.id}" title="Move down" ${isLast ? 'disabled' : ''}>
-          <i class="fa-solid fa-chevron-down"></i>
-        </button>
-        <button class="icon-btn" data-action="visibility" data-id="${layer.id}" title="Toggle opacity">
-          <i class="fa-solid ${layer.opacity < 0.1 ? 'fa-eye-slash' : 'fa-eye'}"></i>
-        </button>
-        <button class="icon-btn danger" data-action="delete" data-id="${layer.id}" title="Delete">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
+        <button class="icon-btn" data-action="up" data-id="${layer.id}" title="Move up" ${isFirst ? 'disabled' : ''}><i class="fa-solid fa-chevron-up"></i></button>
+        <button class="icon-btn" data-action="down" data-id="${layer.id}" title="Move down" ${isLast ? 'disabled' : ''}><i class="fa-solid fa-chevron-down"></i></button>
+        <button class="icon-btn" data-action="visibility" data-id="${layer.id}" title="Toggle opacity"><i class="fa-solid ${layer.opacity < 0.1 ? 'fa-eye-slash' : 'fa-eye'}"></i></button>
+        <button class="icon-btn danger" data-action="delete" data-id="${layer.id}" title="Delete"><i class="fa-solid fa-xmark"></i></button>
       </div>
     </div>`;
   }).join('');
-
   layersList.querySelectorAll('.layer-item').forEach(item => {
-    item.addEventListener('click', (e) => {
-      if (e.target.closest('.layer-actions')) return;
-      selectLayer(parseInt(item.dataset.id));
-    });
+    item.addEventListener('click', (e) => { if (e.target.closest('.layer-actions')) return; selectLayer(parseInt(item.dataset.id)); });
   });
   layersList.querySelectorAll('.icon-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const id = parseInt(btn.dataset.id);
-      const action = btn.dataset.action;
-      const layer = state.layers.find(l => l.id === id);
-      if (!layer) return;
+      e.stopPropagation(); const id = parseInt(btn.dataset.id), action = btn.dataset.action;
+      const layer = state.layers.find(l => l.id === id); if (!layer) return;
       if (action === 'delete') deleteLayer(id);
-      else if (action === 'visibility') {
-        layer.opacity = layer.opacity < 0.1 ? 1 : 0;
-        updateLayerTransform(layer);
-        updateLayerList();
-        if (id === state.selectedId) updateSliderValues(layer);
-      }
-      else if (action === 'up') moveLayerUp(id);
-      else if (action === 'down') moveLayerDown(id);
+      else if (action === 'visibility') { layer.opacity = layer.opacity < 0.1 ? 1 : 0; updateLayerTransform(layer); updateLayerList(); if (id === state.selectedId) updateSliderValues(layer); }
+      else if (action === 'up') moveLayerUp(id); else if (action === 'down') moveLayerDown(id);
     });
   });
 }
 
-function updateUI() {
-  emptyState.classList.toggle('hidden', state.layers.length > 0);
-  updateLayerList();
-  updateTransformPanel();
-}
+function updateUI() { emptyState.classList.toggle('hidden', state.layers.length > 0); updateLayerList(); updateTransformPanel(); }
 
 function deleteLayer(id) {
-  const idx = state.layers.findIndex(l => l.id === id);
-  if (idx === -1) return;
-  const el = document.querySelector(`[data-layer-id="${id}"]`);
-  if (el) el.remove();
-  state.layers.splice(idx, 1);
-  if (state.selectedId === id) state.selectedId = null;
-  updateUI();
-  toast('Layer removed', 'fa-trash-can');
+  saveHistory(); const idx = state.layers.findIndex(l => l.id === id); if (idx === -1) return;
+  const el = document.querySelector(`[data-layer-id="${id}"]`); if (el) el.remove();
+  state.layers.splice(idx, 1); if (state.selectedId === id) state.selectedId = null;
+  updateUI(); toast('Layer removed', 'fa-trash-can');
 }
 
 function duplicateLayer(id) {
-  const layer = state.layers.find(l => l.id === id);
-  if (!layer) return;
+  saveHistory(); const layer = state.layers.find(l => l.id === id); if (!layer) return;
   const newLayer = { ...layer, id: ++state.layerIdCounter, x: layer.x + 24, y: layer.y + 24, z: ++state.zCounter, name: layer.name + ' copy' };
-  state.layers.push(newLayer);
-  renderLayer(newLayer);
-  selectLayer(newLayer.id);
-  updateUI();
-  toast('Layer duplicated', 'fa-clone');
+  state.layers.push(newLayer); renderLayer(newLayer); selectLayer(newLayer.id); updateUI(); toast('Layer duplicated', 'fa-clone');
 }
 
-function bringToFront(id) {
-  const layer = state.layers.find(l => l.id === id);
-  if (!layer) return;
-  layer.z = ++state.zCounter;
-  updateLayerTransform(layer);
-  updateLayerList();
-}
-
-function sendToBack(id) {
-  const layer = state.layers.find(l => l.id === id);
-  if (!layer) return;
-  const minZ = Math.min(...state.layers.map(l => l.z));
-  layer.z = minZ - 1;
-  updateLayerTransform(layer);
-  updateLayerList();
-}
-
+function bringToFront(id) { const layer = state.layers.find(l => l.id === id); if (!layer) return; layer.z = ++state.zCounter; updateLayerTransform(layer); updateLayerList(); }
+function sendToBack(id) { const layer = state.layers.find(l => l.id === id); if (!layer) return; const minZ = Math.min(...state.layers.map(l => l.z)); layer.z = minZ - 1; updateLayerTransform(layer); updateLayerList(); }
 function moveLayerUp(id) {
-  const layer = state.layers.find(l => l.id === id);
-  if (!layer) return;
-  const sorted = [...state.layers].sort((a, b) => b.z - a.z);
-  const idx = sorted.findIndex(l => l.id === id);
-  if (idx === 0) return;
-  const above = sorted[idx - 1];
-  const tempZ = layer.z;
-  layer.z = above.z;
-  above.z = tempZ;
-  updateLayerTransform(layer);
-  updateLayerTransform(above);
-  updateLayerList();
+  const layer = state.layers.find(l => l.id === id); if (!layer) return; const sorted = [...state.layers].sort((a, b) => b.z - a.z);
+  const idx = sorted.findIndex(l => l.id === id); if (idx === 0) return; const above = sorted[idx - 1];
+  const tempZ = layer.z; layer.z = above.z; above.z = tempZ; updateLayerTransform(layer); updateLayerTransform(above); updateLayerList();
 }
-
 function moveLayerDown(id) {
-  const layer = state.layers.find(l => l.id === id);
-  if (!layer) return;
-  const sorted = [...state.layers].sort((a, b) => b.z - a.z);
-  const idx = sorted.findIndex(l => l.id === id);
-  if (idx === sorted.length - 1) return;
-  const below = sorted[idx + 1];
-  const tempZ = layer.z;
-  layer.z = below.z;
-  below.z = tempZ;
-  updateLayerTransform(layer);
-  updateLayerTransform(below);
-  updateLayerList();
+  const layer = state.layers.find(l => l.id === id); if (!layer) return; const sorted = [...state.layers].sort((a, b) => b.z - a.z);
+  const idx = sorted.findIndex(l => l.id === id); if (idx === sorted.length - 1) return; const below = sorted[idx + 1];
+  const tempZ = layer.z; layer.z = below.z; below.z = tempZ; updateLayerTransform(layer); updateLayerTransform(below); updateLayerList();
 }
-
-function centerLayer(id) {
-  const layer = state.layers.find(l => l.id === id);
-  if (!layer) return;
-  const rect = canvasCard.getBoundingClientRect();
-  layer.x = (rect.width - layer.w) / 2;
-  layer.y = (rect.height - layer.h) / 2;
-  updateLayerTransform(layer);
-  updatePositionInputs(layer);
-}
-
-function resetTransform(id) {
-  const layer = state.layers.find(l => l.id === id);
-  if (!layer) return;
-  layer.rotation = 0;
-  layer.scale = 1;
-  layer.opacity = 1;
-  updateLayerTransform(layer);
-  updateSliderValues(layer);
-}
-
+function centerLayer(id) { const layer = state.layers.find(l => l.id === id); if (!layer) return; const rect = canvasCard.getBoundingClientRect(); layer.x = (rect.width - layer.w) / 2; layer.y = (rect.height - layer.h) / 2; updateLayerTransform(layer); updatePositionInputs(layer); }
+function resetTransform(id) { saveHistory(); const layer = state.layers.find(l => l.id === id); if (!layer) return; layer.rotation = 0; layer.scale = 1; layer.opacity = 1; updateLayerTransform(layer); updateSliderValues(layer); }
 function clearAll(skipToast = false) {
-  if (state.layers.length === 0) {
-    if (!skipToast) toast('Canvas is already empty', 'fa-circle-info');
-    return;
-  }
-  state.layers.forEach(l => {
-    const el = document.querySelector(`[data-layer-id="${l.id}"]`);
-    if (el) el.remove();
-  });
-  state.layers = [];
-  state.selectedId = null;
-  updateUI();
-  if (!skipToast) toast('Canvas cleared', 'fa-broom');
+  if (state.layers.length === 0) { if (!skipToast) toast('Canvas is already empty', 'fa-circle-info'); return; }
+  saveHistory(); state.layers.forEach(l => { const el = document.querySelector(`[data-layer-id="${l.id}"]`); if (el) el.remove(); });
+  state.layers = []; state.selectedId = null; updateUI(); if (!skipToast) toast('Canvas cleared', 'fa-broom');
 }
 
 function saveProject() {
-  if (state.layers.length === 0) {
-    toast('Nothing to save. Add some layers first.', 'fa-triangle-exclamation');
-    return;
-  }
-
+  if (state.layers.length === 0) { toast('Nothing to save. Add some layers first.', 'fa-triangle-exclamation'); return; }
   document.getElementById('statusText').textContent = 'Saving template...';
-
   setTimeout(() => {
-    const projectData = state.layers.map(l => ({
-      name: l.name,
-      x: l.x,
-      y: l.y,
-      w: l.w,
-      h: l.h,
-      rotation: l.rotation,
-      opacity: l.opacity,
-      scale: l.scale,
-      z: l.z,
-      aspect: l.aspect
-    }));
-
-    const jsonStr = JSON.stringify(projectData, null, 2);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `workshop-template-${Date.now()}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-
-    document.getElementById('statusText').textContent = 'Ready';
-    toast('Template saved! Load it later to apply to new images.', 'fa-floppy-disk');
+    const projectData = state.layers.map(l => ({ name: l.name, x: l.x, y: l.y, w: l.w, h: l.h, rotation: l.rotation, opacity: l.opacity, scale: l.scale, z: l.z, aspect: l.aspect, shadow: l.shadow }));
+    const jsonStr = JSON.stringify(projectData, null, 2); const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob); const a = document.createElement('a');
+    a.href = url; a.download = `workshop-template-${Date.now()}.json`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    document.getElementById('statusText').textContent = 'Ready'; toast('Template saved!', 'fa-floppy-disk');
   }, 50);
 }
 
 function loadProject(file) {
-  if (!file) return;
-  document.getElementById('statusText').textContent = 'Loading template...';
-
+  if (!file) return; document.getElementById('statusText').textContent = 'Loading template...';
   const reader = new FileReader();
   reader.onload = async (e) => {
     try {
-      const data = JSON.parse(e.target.result);
-      if (!Array.isArray(data)) throw new Error('Invalid template file format');
-
-      clearAll(true);
-      state.zCounter = 0;
-      state.layerIdCounter = 0;
-
-      for (const layerData of data) {
-        const newLayer = {
-          ...layerData,
-          id: ++state.layerIdCounter,
-          z: ++state.zCounter,
-          imgEl: null,
-          src: ''
-        };
-        state.layers.push(newLayer);
-        renderLayer(newLayer);
-      }
-
+      const data = JSON.parse(e.target.result); if (!Array.isArray(data)) throw new Error('Invalid format');
+      clearAll(true); state.zCounter = 0; state.layerIdCounter = 0;
+      for (const layerData of data) { const newLayer = { ...layerData, id: ++state.layerIdCounter, z: ++state.zCounter, imgEl: null, src: '' }; state.layers.push(newLayer); renderLayer(newLayer); }
       updateUI();
-      if (state.layers.length > 0) {
-        const topLayer = [...state.layers].sort((a, b) => b.z - a.z)[0];
-        selectLayer(topLayer.id);
-      }
-
-      document.getElementById('statusText').textContent = 'Ready';
-      toast('Template loaded! Add images to fill the empty slots.', 'fa-folder-open');
-    } catch (err) {
-      console.error(err);
-      document.getElementById('statusText').textContent = 'Ready';
-      toast('Failed to load template (invalid file)', 'fa-triangle-exclamation');
-    }
+      if (state.layers.length > 0) { const topLayer = [...state.layers].sort((a, b) => b.z - a.z)[0]; selectLayer(topLayer.id); }
+      document.getElementById('statusText').textContent = 'Ready'; toast('Template loaded! Add images to fill slots.', 'fa-folder-open');
+    } catch (err) { document.getElementById('statusText').textContent = 'Ready'; toast('Failed to load template', 'fa-triangle-exclamation'); }
   };
   reader.readAsText(file);
 }
 
 function handleFiles(files) {
   const imgs = Array.from(files).filter(f => f.type.startsWith('image/'));
-  if (imgs.length === 0) {
-    toast('No image files selected', 'fa-triangle-exclamation');
-    return;
-  }
-  
+  if (imgs.length === 0) { toast('No image files selected', 'fa-triangle-exclamation'); return; }
   let loaded = 0;
   imgs.forEach((file) => {
     const reader = new FileReader();
     reader.onload = async (e) => {
       const emptySlot = state.layers.find(l => !l.imgEl);
-      
-      if (emptySlot) {
-        await addImageLayer(e.target.result, file.name.replace(/\.[^.]+$/, ''), emptySlot);
-      } else {
-        await addImageLayer(e.target.result, file.name.replace(/\.[^.]+$/, ''));
-      }
-      
-      loaded++;
-      if (loaded === imgs.length) {
-        if (state.layers.some(l => !l.imgEl)) {
-          toast(`Added ${imgs.length} image(s). More slots to fill!`, 'fa-circle-check');
-        } else {
-          toast(`Added ${imgs.length} image${imgs.length > 1 ? 's' : ''}`, 'fa-circle-check');
-        }
-      }
+      if (emptySlot) await addImageLayer(e.target.result, file.name.replace(/\.[^.]+$/, ''), emptySlot);
+      else await addImageLayer(e.target.result, file.name.replace(/\.[^.]+$/, ''));
+      loaded++; if (loaded === imgs.length) toast(`Added ${imgs.length} image${imgs.length > 1 ? 's' : ''}`, 'fa-circle-check');
     };
     reader.readAsDataURL(file);
   });
@@ -1250,306 +810,261 @@ function handleFiles(files) {
 
 function exportCanvas() {
   const exportableLayers = state.layers.filter(l => l.imgEl);
-  
-  if (exportableLayers.length === 0) {
-    toast('No images loaded to export', 'fa-triangle-exclamation');
-    return;
-  }
-
+  if (exportableLayers.length === 0) { toast('No images loaded to export', 'fa-triangle-exclamation'); return; }
   document.getElementById('statusText').textContent = 'Processing...';
   document.getElementById('exportBtn').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Exporting...';
-
   setTimeout(() => {
-    
     let globalMinX = Infinity, globalMinY = Infinity, globalMaxX = -Infinity, globalMaxY = -Infinity;
-
     exportableLayers.forEach(layer => {
       if (layer.opacity < 0.05) return;
-
-      const cx = layer.x + layer.w / 2;
-      const cy = layer.y + layer.h / 2;
-      const scaledW = (layer.w * layer.scale) / 2;
-      const scaledH = (layer.h * layer.scale) / 2;
-
-      const corners = [
-        { x: -scaledW, y: -scaledH },
-        { x:  scaledW, y: -scaledH },
-        { x:  scaledW, y:  scaledH },
-        { x: -scaledW, y:  scaledH }
-      ];
-
-      const angleRad = layer.rotation * Math.PI / 180;
-      const cos = Math.cos(angleRad);
-      const sin = Math.sin(angleRad);
-
-      corners.forEach(c => {
-        const rx = (c.x * cos - c.y * sin) + cx;
-        const ry = (c.x * sin + c.y * cos) + cy;
-
-        if (rx < globalMinX) globalMinX = rx;
-        if (rx > globalMaxX) globalMaxX = rx;
-        if (ry < globalMinY) globalMinY = ry;
-        if (ry > globalMaxY) globalMaxY = ry;
-      });
+      const cx = layer.x + layer.w / 2, cy = layer.y + layer.h / 2;
+      const scaledW = (layer.w * layer.scale) / 2, scaledH = (layer.h * layer.scale) / 2;
+      const corners = [{ x: -scaledW, y: -scaledH }, { x: scaledW, y: -scaledH }, { x: scaledW, y: scaledH }, { x: -scaledW, y: scaledH }];
+      const angleRad = layer.rotation * Math.PI / 180, cos = Math.cos(angleRad), sin = Math.sin(angleRad);
+      corners.forEach(c => { const rx = (c.x * cos - c.y * sin) + cx, ry = (c.x * sin + c.y * cos) + cy; if (rx < globalMinX) globalMinX = rx; if (rx > globalMaxX) globalMaxX = rx; if (ry < globalMinY) globalMinY = ry; if (ry > globalMaxY) globalMaxY = ry; });
     });
-
-    if (globalMinX === Infinity) {
-      toast('No visible images to export', 'fa-triangle-exclamation');
-      resetExportButton();
-      return;
-    }
-
-    const W = Math.ceil(globalMaxX - globalMinX);
-    const H = Math.ceil(globalMaxY - globalMinY);
-
-    const canvas = document.createElement('canvas');
-    canvas.width = W;
-    canvas.height = H;
+    if (globalMinX === Infinity) { toast('No visible images to export', 'fa-triangle-exclamation'); resetExportButton(); return; }
+    const W = Math.ceil(globalMaxX - globalMinX), H = Math.ceil(globalMaxY - globalMinY);
+    const canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
-
-    const sorted = [...exportableLayers].sort((a, b) => a.z - b.z);
-    let drawn = 0;
-
+    const sorted = [...exportableLayers].sort((a, b) => a.z - b.z); let drawn = 0;
     ctx.translate(-globalMinX, -globalMinY);
-
     sorted.forEach(layer => {
       try {
-        ctx.save();
-        ctx.globalAlpha = layer.opacity;
-        const cx = layer.x + layer.w / 2;
-        const cy = layer.y + layer.h / 2;
-        ctx.translate(cx, cy);
-        ctx.rotate(layer.rotation * Math.PI / 180);
-        ctx.scale(layer.scale, layer.scale);
-        ctx.drawImage(layer.imgEl, -layer.w / 2, -layer.h / 2, layer.w, layer.h);
-        ctx.restore();
-        drawn++;
-      } catch (err) {
-        console.warn('draw failed', err);
-      }
+        ctx.save(); ctx.globalAlpha = layer.opacity;
+        const s = layer.shadow;
+        ctx.shadowColor = hexToRgba(s.color, s.opacity);
+        ctx.shadowBlur = s.blur * layer.scale;
+        ctx.shadowOffsetX = s.x * layer.scale;
+        ctx.shadowOffsetY = s.y * layer.scale;
+        const cx = layer.x + layer.w / 2, cy = layer.y + layer.h / 2;
+        ctx.translate(cx, cy); ctx.rotate(layer.rotation * Math.PI / 180); ctx.scale(layer.scale, layer.scale);
+        const source = layer.canvasEl || layer.imgEl;
+        ctx.drawImage(source, -layer.w / 2, -layer.h / 2, layer.w, layer.h);
+        ctx.restore(); drawn++;
+      } catch (err) { console.warn('draw failed', err); }
     });
-
     try {
       canvas.toBlob((blob) => {
-        if (!blob) {
-          toast('Export failed (canvas tainted)', 'fa-triangle-exclamation');
-          resetExportButton();
-          return;
-        }
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `workshop-${W}x${H}-${Date.now()}.png`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
+        if (!blob) { toast('Export failed', 'fa-triangle-exclamation'); resetExportButton(); return; }
+        const url = URL.createObjectURL(blob); const a = document.createElement('a');
+        a.href = url; a.download = `workshop-${W}x${H}-${Date.now()}.png`;
+        document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
         toast(`Exported ${drawn} layer${drawn !== 1 ? 's' : ''} as PNG (${W}×${H})`, 'fa-circle-check');
         resetExportButton();
       }, 'image/png');
-    } catch (err) {
-      toast('Export failed — images may be tainted by CORS', 'fa-triangle-exclamation');
-      resetExportButton();
-    }
-
+    } catch (err) { toast('Export failed', 'fa-triangle-exclamation'); resetExportButton(); }
   }, 50);
 }
 
-function resetExportButton() {
-  document.getElementById('statusText').textContent = 'Ready';
-  document.getElementById('exportBtn').innerHTML = '<i class="fa-solid fa-download"></i> Export PNG';
-}
+function resetExportButton() { document.getElementById('statusText').textContent = 'Ready'; document.getElementById('exportBtn').innerHTML = '<i class="fa-solid fa-download"></i> Export PNG'; }
 
-fileInput.addEventListener('change', (e) => {
-  handleFiles(e.target.files);
-  fileInput.value = '';
-});
-
+fileInput.addEventListener('change', (e) => { handleFiles(e.target.files); fileInput.value = ''; });
 document.getElementById('saveProjectBtn').addEventListener('click', saveProject);
 document.getElementById('loadProjectBtn').addEventListener('click', () => projectInput.click());
-projectInput.addEventListener('change', (e) => {
-  if (e.target.files.length) loadProject(e.target.files[0]);
-  projectInput.value = '';
-});
-
+projectInput.addEventListener('change', (e) => { if (e.target.files.length) loadProject(e.target.files[0]); projectInput.value = ''; });
 document.getElementById('addTool').addEventListener('click', () => fileInput.click());
 document.getElementById('emptyAddBtn').addEventListener('click', () => fileInput.click());
 document.getElementById('exportBtn').addEventListener('click', exportCanvas);
 document.getElementById('clearBtn').addEventListener('click', () => clearAll(false));
-document.getElementById('deleteBtn').addEventListener('click', () => {
-  if (state.selectedId) deleteLayer(state.selectedId);
-  else toast('Select a layer first', 'fa-circle-info');
-});
-document.getElementById('duplicateBtn').addEventListener('click', () => {
-  if (state.selectedId) duplicateLayer(state.selectedId);
-  else toast('Select a layer first', 'fa-circle-info');
-});
-document.getElementById('bringFrontBtn').addEventListener('click', () => {
-  if (state.selectedId) bringToFront(state.selectedId);
-  else toast('Select a layer first', 'fa-circle-info');
-});
-document.getElementById('sendBackBtn').addEventListener('click', () => {
-  if (state.selectedId) sendToBack(state.selectedId);
-  else toast('Select a layer first', 'fa-circle-info');
-});
-document.getElementById('centerBtn').addEventListener('click', () => {
-  if (state.selectedId) centerLayer(state.selectedId);
-  else toast('Select a layer first', 'fa-circle-info');
-});
-document.getElementById('resetBtn').addEventListener('click', () => {
-  if (state.selectedId) resetTransform(state.selectedId);
-  else toast('Select a layer first', 'fa-circle-info');
-});
+document.getElementById('deleteBtn').addEventListener('click', () => { if (state.selectedId) deleteLayer(state.selectedId); else toast('Select a layer first', 'fa-circle-info'); });
+document.getElementById('duplicateBtn').addEventListener('click', () => { if (state.selectedId) duplicateLayer(state.selectedId); else toast('Select a layer first', 'fa-circle-info'); });
+document.getElementById('bringFrontBtn').addEventListener('click', () => { if (state.selectedId) bringToFront(state.selectedId); else toast('Select a layer first', 'fa-circle-info'); });
+document.getElementById('sendBackBtn').addEventListener('click', () => { if (state.selectedId) sendToBack(state.selectedId); else toast('Select a layer first', 'fa-circle-info'); });
+document.getElementById('centerBtn').addEventListener('click', () => { if (state.selectedId) centerLayer(state.selectedId); else toast('Select a layer first', 'fa-circle-info'); });
+document.getElementById('resetBtn').addEventListener('click', () => { if (state.selectedId) resetTransform(state.selectedId); else toast('Select a layer first', 'fa-circle-info'); });
 document.getElementById('frontBtn').addEventListener('click', () => state.selectedId && bringToFront(state.selectedId));
 document.getElementById('backBtn').addEventListener('click', () => state.selectedId && sendToBack(state.selectedId));
 document.getElementById('dupBtn2').addEventListener('click', () => state.selectedId && duplicateLayer(state.selectedId));
 document.getElementById('delBtn2').addEventListener('click', () => state.selectedId && deleteLayer(state.selectedId));
+document.getElementById('lockAspect').addEventListener('change', (e) => { state.lockAspect = e.target.checked; });
 
-document.getElementById('lockAspect').addEventListener('change', (e) => {
-  state.lockAspect = e.target.checked;
+// --- TOOL SWITCHING ---
+function setActiveTool(tool) {
+  state.activeTool = tool;
+  ['selectTool', 'eraserTool', 'brushTool', 'shapeTool', 'gradientTool'].forEach(id => {
+    document.getElementById(id).classList.remove('active');
+  });
+  document.getElementById(tool + 'Tool').classList.add('active');
+  
+  canvasCard.classList.remove('eraser-mode');
+  paintPanel.style.display = 'none';
+  if (tool !== 'select') {
+    canvasCard.classList.add('eraser-mode');
+    paintPanel.style.display = 'block';
+    document.getElementById('sizeRow').style.display = (tool === 'eraser' || tool === 'brush') ? 'flex' : 'none';
+    document.getElementById('brushSettings').style.display = (tool === 'brush') ? 'block' : 'none';
+    document.getElementById('shapeSettings').style.display = (tool === 'shape') ? 'block' : 'none';
+    document.getElementById('gradientSettings').style.display = (tool === 'gradient') ? 'block' : 'none';
+    document.getElementById('resetEraserBtn').style.display = (tool === 'gradient') ? 'none' : 'flex';
+  }
+}
+
+document.getElementById('selectTool').addEventListener('click', () => setActiveTool('select'));
+document.getElementById('eraserTool').addEventListener('click', () => setActiveTool('eraser'));
+document.getElementById('brushTool').addEventListener('click', () => setActiveTool('brush'));
+document.getElementById('shapeTool').addEventListener('click', () => setActiveTool('shape'));
+document.getElementById('gradientTool').addEventListener('click', () => setActiveTool('gradient'));
+
+document.getElementById('sizeSlider').addEventListener('input', (e) => {
+  state.toolSize = parseInt(e.target.value);
+  document.getElementById('sizeVal').textContent = state.toolSize + 'px';
+  updateSliderFill('sizeSlider');
+});
+
+document.getElementById('brushColor').addEventListener('input', (e) => state.brushColor = e.target.value);
+document.getElementById('brushRound').addEventListener('click', () => {
+  state.brushShape = 'round';
+  document.getElementById('brushRound').classList.add('active');
+  document.getElementById('brushSquare').classList.remove('active');
+});
+document.getElementById('brushSquare').addEventListener('click', () => {
+  state.brushShape = 'square';
+  document.getElementById('brushSquare').classList.add('active');
+  document.getElementById('brushRound').classList.remove('active');
+});
+
+document.getElementById('shapeColor').addEventListener('input', (e) => state.shapeColor = e.target.value);
+document.getElementById('shapeRect').addEventListener('click', () => {
+  state.shapeType = 'rect';
+  document.getElementById('shapeRect').classList.add('active');
+  document.getElementById('shapeCircle').classList.remove('active');
+});
+document.getElementById('shapeCircle').addEventListener('click', () => {
+  state.shapeType = 'circle';
+  document.getElementById('shapeCircle').classList.add('active');
+  document.getElementById('shapeRect').classList.remove('active');
+});
+
+document.getElementById('gradColor1').addEventListener('input', (e) => state.gradColor1 = e.target.value);
+document.getElementById('gradColor2').addEventListener('input', (e) => state.gradColor2 = e.target.value);
+document.getElementById('gradLinear').addEventListener('click', () => {
+  state.gradType = 'linear';
+  document.getElementById('gradLinear').classList.add('active');
+  document.getElementById('gradRadial').classList.remove('active');
+});
+document.getElementById('gradRadial').addEventListener('click', () => {
+  state.gradType = 'radial';
+  document.getElementById('gradRadial').classList.add('active');
+  document.getElementById('gradLinear').classList.remove('active');
+});
+
+document.getElementById('applyGradBtn').addEventListener('click', createGradientLayer);
+
+document.getElementById('resetEraserBtn').addEventListener('click', () => {
+  const layer = state.layers.find(l => l.id === state.selectedId);
+  if (!layer || !layer.imgEl) { toast('No layer selected', 'fa-triangle-exclamation'); return; }
+  saveHistory(); layer.canvasEl = null; layer.canvasCtx = null;
+  renderLayer(layer); toast('Layer restored to original', 'fa-rotate-left');
 });
 
 ['posX', 'posY'].forEach(id => {
   const input = document.getElementById(id);
   input.addEventListener('input', () => {
-    const layer = state.layers.find(l => l.id === state.selectedId);
-    if (!layer) return;
-    const val = parseFloat(input.value);
-    if (isNaN(val)) return;
-    if (id === 'posX') layer.x = val;
-    else layer.y = val;
+    const layer = state.layers.find(l => l.id === state.selectedId); if (!layer) return;
+    const val = parseFloat(input.value); if (isNaN(val)) return;
+    if (id === 'posX') layer.x = val; else layer.y = val;
     updateLayerTransform(layer);
   });
-  input.addEventListener('blur', () => {
-    const layer = state.layers.find(l => l.id === state.selectedId);
-    if (layer) updatePositionInputs(layer);
-  });
+  input.addEventListener('blur', () => { const layer = state.layers.find(l => l.id === state.selectedId); if (layer) updatePositionInputs(layer); });
   input.addEventListener('focus', () => input.select());
 });
 
 ['sizeW', 'sizeH'].forEach(id => {
   const input = document.getElementById(id);
   input.addEventListener('input', () => {
-    const layer = state.layers.find(l => l.id === state.selectedId);
-    if (!layer) return;
-    let val = parseFloat(input.value);
-    if (isNaN(val) || val < 1) return;
-    
-    if (id === 'sizeW') {
-      layer.w = val;
-      if (state.lockAspect) {
-        layer.h = val / layer.aspect;
-        document.getElementById('sizeH').value = Math.round(layer.h);
-      }
-    } else {
-      layer.h = val;
-      if (state.lockAspect) {
-        layer.w = val * layer.aspect;
-        document.getElementById('sizeW').value = Math.round(layer.w);
-      }
-    }
+    const layer = state.layers.find(l => l.id === state.selectedId); if (!layer) return;
+    let val = parseFloat(input.value); if (isNaN(val) || val < 1) return;
+    if (id === 'sizeW') { layer.w = val; if (state.lockAspect) { layer.h = val / layer.aspect; document.getElementById('sizeH').value = Math.round(layer.h); } }
+    else { layer.h = val; if (state.lockAspect) { layer.w = val * layer.aspect; document.getElementById('sizeW').value = Math.round(layer.w); } }
     updateLayerTransform(layer);
   });
-  input.addEventListener('blur', () => {
-    const layer = state.layers.find(l => l.id === state.selectedId);
-    if (layer) updateSizeInputs(layer);
-  });
+  input.addEventListener('blur', () => { const layer = state.layers.find(l => l.id === state.selectedId); if (layer) updateSizeInputs(layer); });
   input.addEventListener('focus', () => input.select());
 });
 
 ['opacitySlider', 'scaleSlider', 'rotateSlider'].forEach(id => {
   const s = document.getElementById(id);
   s.addEventListener('input', () => {
-    const layer = state.layers.find(l => l.id === state.selectedId);
-    if (!layer) return;
+    const layer = state.layers.find(l => l.id === state.selectedId); if (!layer) return;
     const v = parseFloat(s.value);
-    if (id === 'opacitySlider') {
-      layer.opacity = v / 100;
-      document.getElementById('opacityVal').textContent = Math.round(v) + '%';
-    } else if (id === 'scaleSlider') {
-      layer.scale = v / 100;
-      document.getElementById('scaleVal').textContent = Math.round(v) + '%';
-    } else if (id === 'rotateSlider') {
-      layer.rotation = v;
-      document.getElementById('rotateVal').textContent = Math.round(v) + '°';
-    }
-    updateLayerTransform(layer);
-    updateSliderFill(id);
+    if (id === 'opacitySlider') { layer.opacity = v / 100; document.getElementById('opacityVal').textContent = Math.round(v) + '%'; }
+    else if (id === 'scaleSlider') { layer.scale = v / 100; document.getElementById('scaleVal').textContent = Math.round(v) + '%'; }
+    else if (id === 'rotateSlider') { layer.rotation = v; document.getElementById('rotateVal').textContent = Math.round(v) + '°'; }
+    updateLayerTransform(layer); updateSliderFill(id);
   });
   s.addEventListener('mousedown', () => updateSliderFill(id));
 });
 
-let dragCounter = 0;
-canvasCard.addEventListener('dragenter', (e) => {
-  e.preventDefault();
-  dragCounter++;
-  canvasCard.classList.add('drag-over');
-});
-canvasCard.addEventListener('dragover', (e) => e.preventDefault());
-canvasCard.addEventListener('dragleave', (e) => {
-  e.preventDefault();
-  dragCounter--;
-  if (dragCounter <= 0) {
-    dragCounter = 0;
-    canvasCard.classList.remove('drag-over');
-  }
-});
-canvasCard.addEventListener('drop', (e) => {
-  e.preventDefault();
-  dragCounter = 0;
-  canvasCard.classList.remove('drag-over');
-  if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+// --- SHADOW CONTROLS ---
+['shadowX', 'shadowY'].forEach(id => {
+  const input = document.getElementById(id);
+  input.addEventListener('input', () => {
+    const layer = state.layers.find(l => l.id === state.selectedId); if (!layer) return;
+    const val = parseFloat(input.value); if (isNaN(val)) return;
+    if (id === 'shadowX') layer.shadow.x = val; else layer.shadow.y = val;
+    updateLayerTransform(layer);
+  });
 });
 
+document.getElementById('shadowBlur').addEventListener('input', (e) => {
+  const layer = state.layers.find(l => l.id === state.selectedId); if (!layer) return;
+  layer.shadow.blur = parseInt(e.target.value);
+  document.getElementById('shadowBlurVal').textContent = layer.shadow.blur + 'px';
+  updateLayerTransform(layer); updateSliderFill('shadowBlur');
+});
+
+document.getElementById('shadowOpacity').addEventListener('input', (e) => {
+  const layer = state.layers.find(l => l.id === state.selectedId); if (!layer) return;
+  layer.shadow.opacity = parseInt(e.target.value) / 100;
+  document.getElementById('shadowOpacityVal').textContent = e.target.value + '%';
+  updateLayerTransform(layer); updateSliderFill('shadowOpacity');
+});
+
+document.getElementById('shadowColor').addEventListener('input', (e) => {
+  const layer = state.layers.find(l => l.id === state.selectedId); if (!layer) return;
+  layer.shadow.color = e.target.value;
+  updateLayerTransform(layer);
+});
+
+let dragCounter = 0;
+canvasCard.addEventListener('dragenter', (e) => { e.preventDefault(); dragCounter++; canvasCard.classList.add('drag-over'); });
+canvasCard.addEventListener('dragover', (e) => e.preventDefault());
+canvasCard.addEventListener('dragleave', (e) => { e.preventDefault(); dragCounter--; if (dragCounter <= 0) { dragCounter = 0; canvasCard.classList.remove('drag-over'); } });
+canvasCard.addEventListener('drop', (e) => { e.preventDefault(); dragCounter = 0; canvasCard.classList.remove('drag-over'); if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
+
 window.addEventListener('paste', (e) => {
-  const items = e.clipboardData?.items;
-  if (!items) return;
-  const files = [];
-  for (const item of items) {
-    if (item.type.startsWith('image/')) {
-      const f = item.getAsFile();
-      if (f) files.push(f);
-    }
-  }
-  if (files.length) {
-    handleFiles(files);
-    toast(`Pasted ${files.length} image${files.length>1?'s':''}`, 'fa-paste');
-  }
+  const items = e.clipboardData?.items; if (!items) return; const files = [];
+  for (const item of items) { if (item.type.startsWith('image/')) { const f = item.getAsFile(); if (f) files.push(f); } }
+  if (files.length) { handleFiles(files); toast(`Pasted ${files.length} image${files.length>1?'s':''}`, 'fa-paste'); }
 });
 
 document.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT') return;
-  if (e.key === 'Delete' || e.key === 'Backspace') {
-    if (state.selectedId) { deleteLayer(state.selectedId); e.preventDefault(); }
-  } else if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
-    e.preventDefault();
-    if (state.selectedId) duplicateLayer(state.selectedId);
-  } else if (e.key === 'Escape') {
-    selectLayer(null);
-  } else if (e.key === 'ArrowUp' && state.selectedId) {
-    e.preventDefault();
-    const layer = state.layers.find(l => l.id === state.selectedId);
-    if (layer) { layer.y -= e.shiftKey ? 10 : 1; updateLayerTransform(layer); updatePositionInputs(layer); }
-  } else if (e.key === 'ArrowDown' && state.selectedId) {
-    e.preventDefault();
-    const layer = state.layers.find(l => l.id === state.selectedId);
-    if (layer) { layer.y += e.shiftKey ? 10 : 1; updateLayerTransform(layer); updatePositionInputs(layer); }
-  } else if (e.key === 'ArrowLeft' && state.selectedId) {
-    e.preventDefault();
-    const layer = state.layers.find(l => l.id === state.selectedId);
-    if (layer) { layer.x -= e.shiftKey ? 10 : 1; updateLayerTransform(layer); updatePositionInputs(layer); }
-  } else if (e.key === 'ArrowRight' && state.selectedId) {
-    e.preventDefault();
-    const layer = state.layers.find(l => l.id === state.selectedId);
-    if (layer) { layer.x += e.shiftKey ? 10 : 1; updateLayerTransform(layer); updatePositionInputs(layer); }
-  }
+  if (e.key === 'Delete' || e.key === 'Backspace') { if (state.selectedId) { deleteLayer(state.selectedId); e.preventDefault(); } }
+  else if ((e.ctrlKey || e.metaKey) && e.key === 'd') { e.preventDefault(); if (state.selectedId) duplicateLayer(state.selectedId); }
+  else if (e.key === 'Escape') { selectLayer(null); }
+  else if (e.key === 'e' || e.key === 'E') { setActiveTool('eraser'); }
+  else if (e.key === 'v' || e.key === 'V') { setActiveTool('select'); }
+  else if (e.key === 'b' || e.key === 'B') { setActiveTool('brush'); }
+  else if (e.key === 's' || e.key === 'S') { setActiveTool('shape'); }
+  else if (e.key === 'g' || e.key === 'G') { setActiveTool('gradient'); }
+  else if (e.key === 'ArrowUp' && state.selectedId) { e.preventDefault(); const layer = state.layers.find(l => l.id === state.selectedId); if (layer) { layer.y -= e.shiftKey ? 10 : 1; updateLayerTransform(layer); updatePositionInputs(layer); } }
+  else if (e.key === 'ArrowDown' && state.selectedId) { e.preventDefault(); const layer = state.layers.find(l => l.id === state.selectedId); if (layer) { layer.y += e.shiftKey ? 10 : 1; updateLayerTransform(layer); updatePositionInputs(layer); } }
+  else if (e.key === 'ArrowLeft' && state.selectedId) { e.preventDefault(); const layer = state.layers.find(l => l.id === state.selectedId); if (layer) { layer.x -= e.shiftKey ? 10 : 1; updateLayerTransform(layer); updatePositionInputs(layer); } }
+  else if (e.key === 'ArrowRight' && state.selectedId) { e.preventDefault(); const layer = state.layers.find(l => l.id === state.selectedId); if (layer) { layer.x += e.shiftKey ? 10 : 1; updateLayerTransform(layer); updatePositionInputs(layer); } }
 });
 
-['opacitySlider', 'scaleSlider', 'rotateSlider'].forEach(updateSliderFill);
+function updateCursorPos(e) {
+  const rect = canvasCard.getBoundingClientRect();
+  if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+    const x = Math.round(e.clientX - rect.left), y = Math.round(e.clientY - rect.top);
+    document.getElementById('cursorPos').textContent = `${x}, ${y}`;
+  }
+}
 
-setTimeout(() => {
-  toast('Welcome to Workshop. Press + or drag images to begin.', 'fa-sparkles');
-}, 600);
+['opacitySlider', 'scaleSlider', 'rotateSlider', 'sizeSlider', 'shadowBlur', 'shadowOpacity'].forEach(updateSliderFill);
+setTimeout(() => { toast('Welcome to Workshop. Press + or drag images to begin.', 'fa-sparkles'); }, 600);
 </script>
 </body>
 </html>
