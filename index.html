@@ -222,6 +222,11 @@
     font-family: 'Fraunces', serif; font-size: 30px; font-weight: 500;
     color: var(--text); margin: 0; letter-spacing: -0.01em;
   }
+  .empty-formats {
+    font-size: 10px; color: var(--muted);
+    opacity: 0.7; letter-spacing: 0.2em;
+    text-transform: uppercase; margin-top: 4px;
+  }
 
   .right-panel {
     background: rgba(20, 16, 12, 0.55);
@@ -388,7 +393,7 @@
     border-left: 3px solid var(--accent);
     padding: 12px 18px; border-radius: 8px;
     color: var(--text); font-size: 13px;
-    display: flex; align-items: center; gap: 10px;
+    display: flex; align-items: center; gap: 10leks;
     box-shadow: 0 12px 40px rgba(0,0,0,0.5);
     animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     min-width: 240px; max-width: 360px;
@@ -460,7 +465,8 @@
           <div class="empty-icon"><i class="fa-solid fa-images"></i></div>
           <h2 class="font-display">Begin Your Composition</h2>
           <p style="margin:0;text-align:center;max-width:340px;font-size:13px;">Drag images here, paste from clipboard, or use the + button to start stacking layers.</p>
-          <div style="display:flex;gap:8px;pointer-events:auto;margin-top:8px;">
+          <div class="empty-formats">Supports: JPG · PNG · GIF · WEBP · SVG</div>
+          <div style="display:flex;gap:8px;pointer-events:auto;margin-top:12px;">
             <button class="btn btn-primary" id="emptyAddBtn"><i class="fa-solid fa-plus"></i> Add Images</button>
           </div>
         </div>
