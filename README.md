@@ -13,6 +13,6 @@
 - 100% Local Processing: Everything happens directly in the user's browser. No data is ever uploaded to a server, ensuring complete privacy and instant performance.
 
 ### Combined with this tools ➥ [Icon-Studio](https://chris1111.github.io/Icon-Studio/) ➥ [Image Resizer](https://chris1111.github.io/Image-Resizer/) 
-they are the perfect tools for creating themes icons for OpenCore or Clover.
+A free easy way for those who have virtually no knowledge of graphic design. they are the perfect tools for creating themes icons sets for OpenCore or Clover.
 
 
