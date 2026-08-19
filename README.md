@@ -18,6 +18,30 @@
 ## List Update: ⬇︎
 <details> 
   <summary>View Update</summary>
+
+### Updated 17 Aug 2026
+
+	1	Redo — button + Ctrl+Shift+Z / Ctrl+Y
+	2	Flip H/V — rail buttons, resize math corrected for flipped corners
+	3	Arrow-key nudge — 1px per press, 10px with Shift
+	4	Rename layer — pen icon ✏️ or double-click the name (Enter saves, Esc cancels)
+	5	Ctrl+D — duplicate shortcut
+	6	Checkerboard — transparency checker behind the document
+	7	Blend modes — 16 modes, baked into export
+	8	Adjustments — Brightness / Contrast / Saturation / Blur / Grayscale / Sepia, non-destructive, in export & saved projects
+	9	Export panel — PNG / JPEG / WebP · 1×/2×/3× · quality slider · transparent toggle + background color · custom filename
+	10	Merge Down + Flatten — bakes blend/rotation/shadows/adjustments into one layer
+	11	Align tools — Left / Right / H-Center / Top / Bottom / V-Middle, rotation-aware
+	12	Pan the view — Space + drag or middle-mouse drag
+	13	Grid + snapping — toggleable grid, snap for drag and arrow nudge, adjustable size
+	14	Crop tool — screen-space overlay with live size label, floating Apply/Cancel, Enter/Esc, guides shift with crop, document auto-clips content, export always matches (the fix we just polished)
+	15	Text layers — T key or "A" rail button; content, 9 fonts, size, color, bold/italic; double-click text on canvas to edit; full transform/blend/shadow/adjustment support; saved in projects
+	16	Layer masks — non-destructive; Brush hides (or shows), Eraser reveals; Apply bakes / Remove discards; survives undo, duplicate and Save/Load
+	17	Custom document size — presets (Instagram, Story/Reel, YouTube thumbnail, Full HD…) + custom W/H + Center All; oversized images auto-enlarge the document instead of spilling
+	18	Rulers & guides — drag from rulers to create cyan guides; drag back into ruler or double-click to delete; layers snap edges/centers while dragging or nudging; Clear All Guides button
+
+
+---------------------------------
 	
 ### Updated 17 Aug 2026
 
@@ -41,6 +65,8 @@
 	◦	True to Size: Exported images are now exactly the size of the visible content (no more 900x560 background canvas!).
 	◦	100% Transparent: The brown background is completely gone in the exported file.
 	◦	Every new layer will now start with no visible shadow, and the panel sliders will show 0px blur and 0% opacity on selection.
+
+---------------------------------
 	
 	
 
