@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,800;9..144,900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <style>
   :root {
     --bg: #14100c; --bg-2: #1c1814;
@@ -57,11 +58,13 @@
   .canvas-card { position: relative; width: 1000px; height: 700px; max-width: 100%; max-height: 100%; background: #0b0906; border-radius: 4px; overflow: hidden; cursor: default; user-select: none; }
   .canvas-card.pan-ready { cursor: grab; }
   .canvas-card.panning { cursor: grabbing !important; }
-  .canvas-card.crop-mode { cursor: crosshair; }
+  .canvas-card.crop-mode, .canvas-card.icon-mode { cursor: crosshair; }
   #docStack { position: absolute; width: 1000px; height: 700px; left: 50%; top: 50%; margin-left: -500px; margin-top: -350px; transform-origin: 50% 50%; }
   #docBg { position: absolute; inset: 0; background-image: conic-gradient(#2e2e2e 0 25%, #232323 0 50%, #2e2e2e 0 75%, #232323 0); background-size: 20px 20px; box-shadow: 0 0 0 1px rgba(255,220,180,0.10), 0 30px 80px -10px rgba(0,0,0,0.7); border-radius: 2px; }
   #docRoot { position: absolute; inset: 0; isolation: isolate; overflow: hidden; border-radius: 2px; }
   #gridOverlay { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 50; background-image: linear-gradient(to right, rgba(233,184,114,0.14) 1px, transparent 1px), linear-gradient(to bottom, rgba(233,184,114,0.14) 1px, transparent 1px); background-size: 50px 50px; }
+  #iconPreview { position: absolute; display: none; align-items: center; justify-content: center; pointer-events: none; z-index: 48; border: 1.5px dashed var(--accent); }
+  #iconPreview .material-icons { line-height: 1; }
   #cropRect { position: absolute; display: none; z-index: 70; border: 1.5px dashed var(--accent); box-shadow: 0 0 0 100000px rgba(8,6,4,0.6); pointer-events: none; }
   #cropLabel { position: absolute; top: 4px; left: 4px; background: var(--accent); color: #1a1410; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; white-space: nowrap; font-variant-numeric: tabular-nums; }
   #cropBar { position: absolute; display: none; z-index: 71; gap: 6px; }
@@ -153,6 +156,13 @@
   .btn-group .btn { padding: 7px; font-size: 12px; justify-content: center; }
   .btn-group .btn.active { background: rgba(233, 184, 114, 0.12); color: var(--accent); border-color: rgba(233, 184, 114, 0.3); }
   .btn-group.cols3 { grid-template-columns: 1fr 1fr 1fr; }
+  .btn-group.cols4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; max-height: 200px; overflow-y: auto; margin-top: 8px; padding-right: 2px; }
+  .icon-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 6px; background: rgba(0,0,0,0.3); cursor: pointer; color: var(--muted); transition: all 0.15s ease; }
+  .icon-cell:hover { color: var(--text); border-color: var(--border-2); background: rgba(0,0,0,0.5); }
+  .icon-cell.selected { color: var(--accent); border-color: rgba(233,184,114,0.4); background: rgba(233,184,114,0.08); }
+  .icon-cell .material-icons { font-size: 20px; pointer-events: none; }
+  .icon-more { grid-column: 1 / -1; text-align: center; color: var(--muted); font-size: 11px; font-style: italic; padding: 8px 0; }
   .footer-bar { padding: 10px 24px; background: rgba(20, 16, 12, 0.9); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; gap: 24px; flex-wrap: wrap; }
   .footer-left { display: flex; flex-direction: column; gap: 4px; }
   .footer-statuses { display: flex; gap: 18px; flex-wrap: wrap; }
@@ -200,7 +210,7 @@
       <button class="tool-btn active" id="selectTool" title="Select & Move (V)"><i class="fa-solid fa-arrow-pointer"></i></button>
       <button class="tool-btn" id="eraserTool" title="Eraser (E)"><i class="fa-solid fa-eraser"></i></button>
       <button class="tool-btn" id="brushTool" title="Brush (B)"><i class="fa-solid fa-paintbrush"></i></button>
-      <button class="tool-btn" id="shapeTool" title="Shapes (S)"><i class="fa-solid fa-shapes"></i></button>
+      <button class="tool-btn" id="shapeTool" title="Shapes & Icons (S)"><i class="fa-solid fa-shapes"></i></button>
       <button class="tool-btn" id="gradientTool" title="Gradient (G)"><i class="fa-solid fa-fill-drip"></i></button>
       <button class="tool-btn" id="textTool" title="Add Text Layer (T)"><i class="fa-solid fa-font"></i></button>
       <button class="tool-btn" id="cropTool" title="Crop Document (C)"><i class="fa-solid fa-crop-simple"></i></button>
@@ -228,6 +238,7 @@
         <div id="docStack">
           <div id="docBg"></div>
           <div id="docRoot"></div>
+          <div id="iconPreview"><i class="material-icons" id="iconPreviewGlyph"></i></div>
           <div id="gridOverlay"></div>
         </div>
         <div id="guidesLayer"></div>
@@ -290,9 +301,20 @@
                 <input type="color" id="shapeColor" value="#ff7849">
               </div>
               <div class="slider-label"><span>Shape Type</span></div>
-              <div class="btn-group">
-                <button class="btn active" id="shapeRect"><i class="fa-solid fa-square"></i> Rectangle</button>
+              <div class="btn-group cols4">
+                <button class="btn active" id="shapeRect"><i class="fa-solid fa-square"></i> Rect</button>
+                <button class="btn" id="shapeIos"><i class="fa-brands fa-apple"></i> iOS</button>
                 <button class="btn" id="shapeCircle"><i class="fa-solid fa-circle"></i> Circle</button>
+                <button class="btn" id="shapeIcon"><i class="material-icons" style="font-size:13px;">star</i> Icon</button>
+              </div>
+              <div class="panel-hint" style="padding:6px 0 0;">Click or drag on the canvas — the shape is stamped as a <span class="kbd">movable layer</span>.</div>
+              <div id="iconPicker" style="display:none;">
+                <div class="input-row" style="margin-top:8px;">
+                  <label style="width:auto;"><i class="fa-solid fa-magnifying-glass" style="font-size:11px;"></i></label>
+                  <input type="text" class="num-input" id="iconSearch" placeholder="Search icons…" autocomplete="off">
+                </div>
+                <div class="icon-grid" id="iconGrid"></div>
+                <div class="panel-hint" style="padding:6px 0 0;">Selected: <span class="kbd" id="iconPickName">favorite</span></div>
               </div>
             </div>
 
@@ -389,6 +411,7 @@
             </select>
 
             <div class="panel-title" style="margin-top:20px;"><span>Adjustments</span></div>
+            <div class="slider-row"><div class="slider-label"><span>Hue</span><span id="adjHueVal">0°</span></div><input type="range" id="adjHue" min="0" max="360" value="0"></div>
             <div class="slider-row"><div class="slider-label"><span>Brightness</span><span id="adjBrightnessVal">100%</span></div><input type="range" id="adjBrightness" min="0" max="200" value="100"></div>
             <div class="slider-row"><div class="slider-label"><span>Contrast</span><span id="adjContrastVal">100%</span></div><input type="range" id="adjContrast" min="0" max="200" value="100"></div>
             <div class="slider-row"><div class="slider-label"><span>Saturation</span><span id="adjSaturationVal">100%</span></div><input type="range" id="adjSaturation" min="0" max="200" value="100"></div>
@@ -563,7 +586,7 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
-const NEUTRAL = { brightness: 100, contrast: 100, saturate: 100, blur: 0, grayscale: 0, sepia: 0 };
+const NEUTRAL = { brightness: 100, contrast: 100, saturate: 100, hue: 0, blur: 0, grayscale: 0, sepia: 0 };
 const WEBP_OK = document.createElement('canvas').toDataURL('image/webp').indexOf('data:image/webp') === 0;
 
 const state = {
@@ -572,13 +595,13 @@ const state = {
   needFit: false,
   layers: [], selectedId: null, zCounter: 1, layerIdCounter: 0,
   isDragging: false, isResizing: false, isRotating: false,
-  isErasing: false, isDrawing: false, isDrawingShape: false, dragMoved: false,
+  isErasing: false, isDrawing: false, dragMoved: false,
   dragStart: { x: 0, y: 0, lx: 0, ly: 0 }, resizeHandle: null, resizeStart: null, rotateStart: null,
   lockAspect: true, activeTool: 'select', toolSize: 40,
   brushColor: '#e9b872', brushShape: 'round',
-  shapeColor: '#ff7849', shapeType: 'rect',
+  shapeColor: '#ff7849', shapeType: 'rect', shapeIcon: 'favorite', iconDrag: null,
   gradColor1: '#e9b872', gradColor2: '#ff7849', gradType: 'linear',
-  history: [], redo: [], lastBrushPoint: { x: 0, y: 0 }, drawStart: { x: 0, y: 0 }, canvasSnapshot: null,
+  history: [], redo: [], lastBrushPoint: { x: 0, y: 0 },
   view: { z: 1, S: 1, px: 0, py: 0 },
   spaceDown: false, isPanning: false, panStart: { x: 0, y: 0, px: 0, py: 0 }, lastNudge: 0,
   grid: { show: false, snap: false, size: 50 },
@@ -656,8 +679,6 @@ function setDocSize(w, h) {
   applyView();
 }
 
-/* Auto-grow: the document expands to contain a layer pushed past its edges
-   (scale / rotate / resize). Deliberate frames (preset / custom / crop) are locked. */
 function growDocToContainLayer(l) {
   if (state.docLocked || !l) return false;
   const b = layerBBox(l, false);
@@ -864,20 +885,21 @@ function snapToGuides(l) {
   if (dh !== null) l.y += dh;
 }
 
-/* ---------------- Filters ---------------- */
+/* ---------------- Filters (incl. Hue) ---------------- */
 function cssFilter(a) {
   a = a || NEUTRAL;
   const parts = [];
   if (a.brightness !== 100) parts.push(`brightness(${a.brightness / 100})`);
   if (a.contrast !== 100) parts.push(`contrast(${a.contrast / 100})`);
   if (a.saturate !== 100) parts.push(`saturate(${a.saturate / 100})`);
+  if (a.hue > 0) parts.push(`hue-rotate(${a.hue}deg)`);
   if (a.blur > 0) parts.push(`blur(${a.blur}px)`);
   if (a.grayscale > 0) parts.push(`grayscale(${a.grayscale / 100})`);
   if (a.sepia > 0) parts.push(`sepia(${a.sepia / 100})`);
   return parts;
 }
 
-/* ---------------- History (remembers the document size) ---------------- */
+/* ---------------- History ---------------- */
 function snapshot() {
   return state.layers.map(l => {
     let canvasData = null, maskData = null, baseData = null;
@@ -965,7 +987,7 @@ async function redoAction() {
 document.getElementById('undoBtn').addEventListener('click', undoAction);
 document.getElementById('redoBtn').addEventListener('click', redoAction);
 
-/* ---------------- Layer canvases & painting (mask-aware) ---------------- */
+/* ---------------- Layer canvases & painting ---------------- */
 function getLayerCanvas(layer) {
   if (!layer.canvasEl) {
     layer.canvasEl = document.createElement('canvas');
@@ -1065,17 +1087,18 @@ function drawBrushLine(layer, from, to) {
   afterPaint(layer);
 }
 
-function drawShapePreview(layer, from, to) {
-  const ctx = getPaintCanvas(layer).getContext('2d');
-  ctx.putImageData(state.canvasSnapshot, 0, 0);
-  ctx.fillStyle = state.shapeColor;
-  if (state.shapeType === 'rect') { ctx.fillRect(from.x, from.y, to.x - from.x, to.y - from.y); }
-  else {
-    const cx = (from.x + to.x) / 2, cy = (from.y + to.y) / 2;
-    const rx = Math.abs(to.x - from.x) / 2, ry = Math.abs(to.y - from.y) / 2;
-    ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
-  }
-  afterPaint(layer);
+/* iOS "squircle" — rounded rectangle with the iOS app-icon radius (22.37%) */
+function roundRectPath(ctx, x, y, w, h, r) {
+  if (w < 0) { x += w; w = -w; }
+  if (h < 0) { y += h; h = -h; }
+  r = Math.max(0, Math.min(r, Math.min(w, h) / 2));
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
 }
 
 /* ---------------- Text layers ---------------- */
@@ -1237,6 +1260,196 @@ function createGradientLayer() {
   toast('Gradient layer added', 'fa-fill-drip');
 }
 
+/* ============================================================
+   ICON LIBRARY — compact starter list + smart cache:
+   the full 2,234-icon library is fetched once online and
+   saved to localStorage, then loads instantly forever
+   (even offline). The starter list below is just the safety
+   net for the very first load.
+   ============================================================ */
+const POPULAR_ICONS = [
+  'favorite', 'star', 'home', 'mail', 'send', 'person', 'people', 'shopping_cart',
+  'lock', 'search', 'settings', 'check_circle', 'warning', 'info', 'help', 'close',
+  'add', 'remove', 'edit', 'delete', 'done', 'refresh', 'menu', 'favorite_border'
+];
+let iconList = POPULAR_ICONS.slice();
+const iconMap = {};
+
+function iconGlyph(name) {
+  return (name in iconMap) ? String.fromCodePoint(iconMap[name]) : name;
+}
+
+function buildIconGrid() {
+  const grid = document.getElementById('iconGrid');
+  const q = (document.getElementById('iconSearch').value || '').toLowerCase().trim();
+  const list = q ? iconList.filter(n => n.includes(q)) : iconList;
+  const MAX = 420;
+  const shown = list.slice(0, MAX);
+  grid.innerHTML = shown.map(n =>
+    `<div class="icon-cell${n === state.shapeIcon ? ' selected' : ''}" data-icon="${n}" title="${n}"><i class="material-icons">${n}</i></div>`
+  ).join('')
+  + (list.length > MAX ? `<div class="icon-more">… ${list.length - MAX} more — type to search</div>` : '')
+  + (list.length === 0 ? '<div class="icon-more">No icon found</div>' : '');
+}
+
+document.getElementById('iconGrid').addEventListener('click', e => {
+  const cell = e.target.closest('.icon-cell');
+  if (!cell) return;
+  state.shapeIcon = cell.dataset.icon;
+  document.getElementById('iconPickName').textContent = state.shapeIcon;
+  buildIconGrid();
+  toast(`Icon: ${state.shapeIcon}`, 'fa-shapes');
+});
+document.getElementById('iconSearch').addEventListener('input', buildIconGrid);
+
+const shapeTypeButtons = [['shapeRect', 'rect'], ['shapeIos', 'ios'], ['shapeCircle', 'circle'], ['shapeIcon', 'icon']];
+shapeTypeButtons.forEach(([id, val]) => {
+  document.getElementById(id).addEventListener('click', () => {
+    shapeTypeButtons.forEach(([oid]) => document.getElementById(oid).classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    state.shapeType = val;
+    document.getElementById('iconPicker').style.display = (val === 'icon') ? 'block' : 'none';
+    syncIconMode();
+  });
+});
+
+function syncIconMode() {
+  canvasCard.classList.toggle('icon-mode', state.activeTool === 'shape');
+}
+
+function startIconDrag(e) {
+  const p = clientToDoc(e.clientX, e.clientY);
+  state.iconDrag = { x0: p.x, y0: p.y, x1: p.x, y1: p.y };
+  updateIconPreview();
+}
+
+function updateIconPreview() {
+  const d = state.iconDrag; if (!d) return;
+  const el = document.getElementById('iconPreview');
+  const x = Math.min(d.x0, d.x1), y = Math.min(d.y0, d.y1);
+  const w = Math.abs(d.x1 - d.x0), h = Math.abs(d.y1 - d.y0);
+  if (w < 2 || h < 2) { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+  el.style.width = w + 'px'; el.style.height = h + 'px';
+  const g = document.getElementById('iconPreviewGlyph');
+  if (state.shapeType === 'icon') {
+    g.style.display = '';
+    el.style.background = 'transparent';
+    g.style.fontSize = (Math.min(w, h) * 0.83) + 'px';
+    g.style.color = state.shapeColor;
+    g.textContent = state.shapeIcon;
+  } else {
+    g.style.display = 'none';
+    el.style.background = state.shapeColor;
+  }
+}
+
+async function stampIconLayer(x, y, w, h) {
+  try {
+    if (document.fonts && document.fonts.load) {
+      await document.fonts.load(`${Math.round(Math.min(w, h) * 0.83)}px "Material Icons"`, state.shapeIcon);
+    }
+  } catch (err) {}
+  const W = Math.max(8, Math.round(w)), H = Math.max(8, Math.round(h));
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+  const size = Math.min(W, H) * 0.83;
+  ctx.font = `${size}px "Material Icons"`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = state.shapeColor;
+  ctx.fillText(iconGlyph(state.shapeIcon), W / 2, H / 2);
+  addStampLayer(c, 'Icon: ' + state.shapeIcon, x, y);
+  toast(`"${state.shapeIcon}" stamped — drag it to move`, 'fa-shapes');
+}
+
+/* Rect / iOS / Circle stamp as movable layers */
+function stampShapeLayer(x, y, w, h) {
+  const W = Math.max(8, Math.round(w)), H = Math.max(8, Math.round(h));
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = state.shapeColor;
+  if (state.shapeType === 'rect') {
+    ctx.fillRect(0, 0, W, H);
+  } else if (state.shapeType === 'ios') {
+    roundRectPath(ctx, 0, 0, W, H, Math.min(W, H) * 0.2237);
+    ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.ellipse(W / 2, H / 2, W / 2, H / 2, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  const names = { rect: 'Rect', ios: 'iOS Shape', circle: 'Circle' };
+  addStampLayer(c, 'Shape: ' + (names[state.shapeType] || state.shapeType), x, y);
+  toast(`${names[state.shapeType]} stamped — drag it to move`, 'fa-shapes');
+}
+
+/* Shared layer factory for stamped icons & shapes */
+function addStampLayer(c, name, x, y) {
+  const dataUrl = c.toDataURL('image/png');
+  const layer = {
+    id: ++state.layerIdCounter, type: 'image', src: dataUrl, name,
+    x: Math.round(x), y: Math.round(y), w: c.width, h: c.height,
+    rotation: 0, opacity: 1, scale: 1, z: ++state.zCounter,
+    imgEl: null, aspect: c.width / c.height, flipX: false, flipY: false,
+    blend: 'normal', adjust: { ...NEUTRAL }, text: null, textNat: null,
+    canvasEl: c, canvasCtx: c.getContext('2d'), baseCanvas: null, maskCanvas: null,
+    shadow: { x: 0, y: 0, blur: 0, opacity: 0, color: '#000000' }
+  };
+  const img = new Image();
+  img.onload = () => { layer.imgEl = img; updateLayerList(); };
+  img.src = dataUrl;
+  state.layers.push(layer);
+  renderLayer(layer); selectLayer(layer.id); updateUI();
+  if (growDocToContainLayer(layer)) fitView();
+  setActiveTool('select');
+}
+
+(function loadIconLibrary() {
+  // 1) INSTANT: full library from cache (if available)
+  try {
+    const cached = localStorage.getItem('workshop_icon_cache');
+    if (cached) {
+      const data = JSON.parse(cached);
+      if (data && Array.isArray(data.names) && data.names.length > 500 && data.map) {
+        Object.keys(data.map).forEach(k => { iconMap[k] = data.map[k]; });
+        const popSet = new Set(POPULAR_ICONS);
+        iconList = POPULAR_ICONS.filter(n => n in iconMap).concat(data.names.filter(n => !popSet.has(n)));
+        buildIconGrid();
+      }
+    }
+  } catch (e) {}
+
+  // 2) ONLINE: fetch fresh official list and cache it
+  if (document.fonts && document.fonts.load) {
+    document.fonts.load('24px "Material Icons"').then(() => buildIconGrid()).catch(() => {});
+  }
+  fetch('https://raw.githubusercontent.com/google/material-design-icons/master/font/MaterialIcons-Regular.codepoints')
+    .then(r => { if (!r.ok) throw new Error('net'); return r.text(); })
+    .then(txt => {
+      const pairs = txt.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#')).map(l => l.split(/\s+/));
+      const valid = pairs.filter(p => p.length === 2 && /^[0-9a-f]{4,5}$/i.test(p[1]));
+      if (valid.length > 500) {
+        valid.forEach(p => { iconMap[p[0]] = parseInt(p[1], 16); });
+        const popSet = new Set(POPULAR_ICONS);
+        const pop = POPULAR_ICONS.filter(n => n in iconMap);
+        const rest = valid.map(p => p[0]).filter(n => !popSet.has(n));
+        iconList = pop.concat(rest);
+        buildIconGrid();
+        try {
+          localStorage.setItem('workshop_icon_cache', JSON.stringify({
+            names: iconList,
+            map: iconMap,
+            saved: Date.now()
+          }));
+        } catch (e) {}
+      }
+    })
+    .catch(() => {});
+})();
+buildIconGrid();
+
 /* ---------------- Crop ---------------- */
 function startCropDrag(e) {
   e.preventDefault();
@@ -1337,6 +1550,13 @@ document.addEventListener('mousemove', (e) => {
     return;
   }
 
+  if (state.iconDrag) {
+    const p = clientToDoc(e.clientX, e.clientY);
+    state.iconDrag.x1 = p.x; state.iconDrag.y1 = p.y;
+    updateIconPreview();
+    return;
+  }
+
   if (state.cropDrag) {
     const r = canvasCard.getBoundingClientRect();
     state.cropDrag.x1 = e.clientX - r.left;
@@ -1349,9 +1569,6 @@ document.addEventListener('mousemove', (e) => {
   else if (state.activeTool === 'brush' && state.isDrawing) {
     const layer = sel();
     if (layer) { const coords = getLocalCoords(layer, e.clientX, e.clientY); drawBrushLine(layer, state.lastBrushPoint, coords); state.lastBrushPoint = coords; }
-  } else if (state.activeTool === 'shape' && state.isDrawingShape) {
-    const layer = sel();
-    if (layer) { const coords = getLocalCoords(layer, e.clientX, e.clientY); drawShapePreview(layer, state.drawStart, coords); }
   }
 
   if (state.isDragging) {
@@ -1392,7 +1609,6 @@ document.addEventListener('mousemove', (e) => {
 document.addEventListener('mouseup', (e) => {
   if (state.isErasing) state.isErasing = false;
   if (state.isDrawing) state.isDrawing = false;
-  if (state.isDrawingShape) { state.isDrawingShape = false; state.canvasSnapshot = null; }
   if (state.isPanning) { state.isPanning = false; canvasCard.classList.remove('panning'); }
 
   if (state.guideDrag) {
@@ -1401,6 +1617,22 @@ document.addEventListener('mouseup', (e) => {
     const inRuler = gd.axis === 'h' ? (e.clientY - r.top < 20) : (e.clientX - r.left < 20);
     if (!inRuler) state.guides[gd.axis].push(gd.coord);
     renderGuides();
+  }
+
+  if (state.iconDrag) {
+    const d = state.iconDrag; state.iconDrag = null;
+    const el = document.getElementById('iconPreview');
+    el.style.display = 'none'; el.style.background = 'transparent';
+    const iw = Math.abs(d.x1 - d.x0), ih = Math.abs(d.y1 - d.y0);
+    saveHistory();
+    if (iw >= 8 && ih >= 8) {
+      const sx = Math.min(d.x0, d.x1), sy = Math.min(d.y0, d.y1);
+      if (state.shapeType === 'icon') stampIconLayer(sx, sy, iw, ih);
+      else stampShapeLayer(sx, sy, iw, ih);
+    } else {
+      if (state.shapeType === 'icon') stampIconLayer(d.x0 - 100, d.y0 - 100, 200, 200);
+      else stampShapeLayer(d.x0 - 100, d.y0 - 100, 200, 200);
+    }
   }
 
   if (state.cropDrag) {
@@ -1523,6 +1755,7 @@ function attachLayerEvents(el, layer) {
   el.addEventListener('mousedown', (e) => {
     if (state.spaceDown || e.button === 1) return;
     if (state.activeTool === 'crop') { e.stopPropagation(); startCropDrag(e); return; }
+    if (state.activeTool === 'shape') { e.stopPropagation(); startIconDrag(e); return; }
     e.stopPropagation(); selectLayer(layer.id);
     if (!hasContent(layer)) return;
     if (state.activeTool === 'eraser') { saveHistory(); state.isErasing = true; eraseAtPos(e.clientX, e.clientY); return; }
@@ -1530,12 +1763,6 @@ function attachLayerEvents(el, layer) {
       saveHistory(); state.isDrawing = true;
       const coords = getLocalCoords(layer, e.clientX, e.clientY);
       state.lastBrushPoint = coords; drawBrushDot(layer, coords.x, coords.y); return;
-    }
-    if (state.activeTool === 'shape') {
-      saveHistory(); state.isDrawingShape = true;
-      state.drawStart = getLocalCoords(layer, e.clientX, e.clientY);
-      const ctx = getPaintCanvas(layer).getContext('2d');
-      state.canvasSnapshot = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height); return;
     }
     const target = e.target;
     if (target.classList.contains('layer-handle')) {
@@ -1581,6 +1808,7 @@ function startPan(e) {
 canvasCard.addEventListener('mousedown', (e) => {
   if (state.spaceDown || e.button === 1) { e.preventDefault(); startPan(e); return; }
   if (state.activeTool === 'crop') { e.preventDefault(); startCropDrag(e); return; }
+  if (state.activeTool === 'shape') { e.preventDefault(); startIconDrag(e); return; }
   if (e.target === canvasCard || e.target === docStack || e.target === docBg || e.target === docRoot || e.target === emptyState || emptyState.contains(e.target)) { selectLayer(null); }
 });
 
@@ -1609,6 +1837,7 @@ function updateSliderValues(layer) {
   setRange('shadowOpacity', 'shadowOpacityVal', Math.round(layer.shadow.opacity * 100), v => v + '%');
   document.getElementById('shadowColor').value = layer.shadow.color;
   const a = layer.adjust || NEUTRAL;
+  setRange('adjHue', 'adjHueVal', a.hue || 0, v => v + '°');
   setRange('adjBrightness', 'adjBrightnessVal', a.brightness, v => v + '%');
   setRange('adjContrast', 'adjContrastVal', a.contrast, v => v + '%');
   setRange('adjSaturation', 'adjSaturationVal', a.saturate, v => v + '%');
@@ -1787,7 +2016,7 @@ function drawLayer(ctx, l, offX, offY) {
   let src = l.canvasEl || l.imgEl;
   if (!src) return;
   const a = l.adjust;
-  const needsFilter = a && (a.brightness !== 100 || a.contrast !== 100 || a.saturate !== 100 || a.blur > 0 || a.grayscale > 0 || a.sepia > 0);
+  const needsFilter = a && (a.brightness !== 100 || a.contrast !== 100 || a.saturate !== 100 || a.hue > 0 || a.blur > 0 || a.grayscale > 0 || a.sepia > 0);
   if (needsFilter) {
     const t = document.createElement('canvas');
     t.width = Math.max(1, Math.round(l.w)); t.height = Math.max(1, Math.round(l.h));
@@ -1907,13 +2136,13 @@ function setActiveTool(name) {
   paintHint.style.display = isPaint ? 'none' : 'block';
   if (isPaint) openSection('sec-paint', true);
   else collapseSection('sec-paint');
-  const names = { eraser: 'Eraser Settings', brush: 'Brush Settings', shape: 'Shape Settings', gradient: 'Gradient Settings' };
+  const names = { eraser: 'Eraser Settings', brush: 'Brush Settings', shape: 'Shape & Icon Settings', gradient: 'Gradient Settings' };
   document.getElementById('paintToolName').textContent = names[name] || 'Tool Settings';
   document.getElementById('sizeRow').style.display = (name === 'eraser' || name === 'brush') ? 'flex' : 'none';
   document.getElementById('brushSettings').style.display = name === 'brush' ? 'block' : 'none';
   document.getElementById('shapeSettings').style.display = name === 'shape' ? 'block' : 'none';
   document.getElementById('gradientSettings').style.display = name === 'gradient' ? 'block' : 'none';
-  document.getElementById('resetEraserBtn').style.display = ['eraser', 'brush', 'shape'].includes(name) ? 'inline-flex' : 'none';
+  document.getElementById('resetEraserBtn').style.display = ['eraser', 'brush'].includes(name) ? 'inline-flex' : 'none';
   if (name === 'crop') {
     canvasCard.classList.add('crop-mode');
     openSection('sec-document', true);
@@ -1921,6 +2150,7 @@ function setActiveTool(name) {
   } else {
     canvasCard.classList.remove('crop-mode');
   }
+  syncIconMode();
 }
 toolButtons.forEach(([btnId, tname]) => {
   document.getElementById(btnId).addEventListener('click', () => {
@@ -2052,6 +2282,7 @@ function bindAdj(id, key, fmt) {
     updateLayerTransform(l);
   });
 }
+bindAdj('adjHue', 'hue', v => v + '°');
 bindAdj('adjBrightness', 'brightness', v => v + '%');
 bindAdj('adjContrast', 'contrast', v => v + '%');
 bindAdj('adjSaturation', 'saturate', v => v + '%');
@@ -2088,7 +2319,6 @@ function bindToggle(pairs, apply) {
   });
 }
 bindToggle([['brushRound', 'round'], ['brushSquare', 'square']], v => state.brushShape = v);
-bindToggle([['shapeRect', 'rect'], ['shapeCircle', 'circle']], v => state.shapeType = v);
 bindToggle([['gradLinear', 'linear'], ['gradRadial', 'radial']], v => state.gradType = v);
 document.getElementById('applyGradBtn').addEventListener('click', createGradientLayer);
 
@@ -2212,6 +2442,7 @@ document.getElementById('resetAllBtn').addEventListener('click', () => {
   if (!confirm('Reset everything?\n\n• All layers removed (recoverable with Undo)\n• Document back to 1000 × 700 (auto-grow re-enabled)\n• Guides, grid and view reset\n• Export & tool settings back to defaults')) return;
   saveHistory();
   state.crop = null; state.cropDrag = null; updateCropUI();
+  state.iconDrag = null; const ip = document.getElementById('iconPreview'); ip.style.display = 'none'; ip.style.background = 'transparent';
   state.layers.forEach(l => { const el = document.querySelector(`[data-layer-id="${l.id}"]`); if (el) el.remove(); });
   state.layers = []; state.selectedId = null;
   document.getElementById('docPreset').value = '1000x700';
@@ -2232,7 +2463,15 @@ document.getElementById('resetAllBtn').addEventListener('click', () => {
   document.getElementById('brushRound').classList.add('active'); document.getElementById('brushSquare').classList.remove('active');
   state.shapeColor = '#ff7849'; document.getElementById('shapeColor').value = '#ff7849';
   state.shapeType = 'rect';
-  document.getElementById('shapeRect').classList.add('active'); document.getElementById('shapeCircle').classList.remove('active');
+  document.getElementById('shapeRect').classList.add('active');
+  document.getElementById('shapeIos').classList.remove('active');
+  document.getElementById('shapeCircle').classList.remove('active');
+  document.getElementById('shapeIcon').classList.remove('active');
+  document.getElementById('iconPicker').style.display = 'none';
+  state.shapeIcon = 'favorite';
+  document.getElementById('iconPickName').textContent = 'favorite';
+  document.getElementById('iconSearch').value = '';
+  buildIconGrid();
   state.gradColor1 = '#e9b872'; state.gradColor2 = '#ff7849'; state.gradType = 'linear';
   document.getElementById('gradColor1').value = '#e9b872'; document.getElementById('gradColor2').value = '#ff7849';
   document.getElementById('gradLinear').classList.add('active'); document.getElementById('gradRadial').classList.remove('active');
@@ -2306,8 +2545,6 @@ document.getElementById('exportBtn').addEventListener('click', () => {
     else { mime = 'image/webp'; ext = 'webp'; }
   }
 
-  // PADDING: the visible window (cw × ch at cx0,cy0) is what gets clipped;
-  // the export canvas grows by `pad` on all four sides around it.
   const pad = state.export.padding || 0;
   let cx0, cy0, cw, ch;
   if (state.export.bounds === 'doc') {
@@ -2455,6 +2692,7 @@ renderGuides();
 updateGrid();
 updateExportUI();
 requestAnimationFrame(applyView);
+toast('Welcome to the Workshop! Start your Composition', 'fa-hand-sparkles');
 </script>
 </body>
 </html>

@@ -25,6 +25,8 @@
         1       Adds an Export Padding slider to the UI and wires it into export state, reset behavior, and live value display. 
         2       Export rendering now expands the output canvas by padding on all sides while clipping content to the original selected bounds, enabling transparent or background-colored margins around exported images. 
         3       Also includes minor wording/comment cleanups in document and history hints.
+        4       Expands the shape workflow into a shape/icon stamping tool with rectangle, iOS squircle, circle, and Material Icons support, including searchable icon picking, drag-preview stamping, and cached icon library loading. 
+        5       It also adds hue-rotate as a new layer adjustment control and wires it through filter rendering, updates related tool UI/labels, and resets the new icon state correctly in full reset.
 
 ---------------------------------
 
@@ -48,7 +50,6 @@
 	16	Layer masks — non-destructive; Brush hides (or shows), Eraser reveals; Apply bakes / Remove discards; survives undo, duplicate and Save/Load
 	17	Custom document size — presets (Instagram, Story/Reel, YouTube thumbnail, Full HD…) + custom W/H + Center All; oversized images auto-enlarge the document instead of spilling
 	18	Rulers & guides — drag from rulers to create cyan guides; drag back into ruler or double-click to delete; layers snap edges/centers while dragging or nudging; Clear All Guides button
-
 
 ---------------------------------
 	
