@@ -19,7 +19,7 @@
 <details> 
   <summary>View Update</summary>
 
-### Updated 17 Aug 2026
+### Updated 19 Aug 2026
 
 	1	Redo — button + Ctrl+Shift+Z / Ctrl+Y
 	2	Flip H/V — rail buttons, resize math corrected for flipped corners
