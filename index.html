@@ -522,10 +522,11 @@
         <button type="button" class="panel-head"><span>Export</span><span class="head-right"><i class="fa-solid fa-chevron-down chev"></i></span></button>
         <div class="panel-body"><div class="panel-inner">
           <div class="slider-label"><span>Format</span></div>
-          <div class="btn-group cols3">
+          <div class="btn-group cols4">
             <button class="btn active" id="expPng">PNG</button>
             <button class="btn" id="expJpg">JPEG</button>
             <button class="btn" id="expWebp">WebP</button>
+            <button class="btn" id="expSvg">SVG</button>
           </div>
           <div class="slider-label" style="margin-top:10px;"><span>Bounds</span></div>
           <div class="btn-group">
@@ -552,7 +553,7 @@
             <input type="color" id="expBg" value="#ffffff">
           </div>
           <div class="input-row" style="margin-top:10px;"><label style="width:auto;"><i class="fa-solid fa-file-lines" style="font-size:11px;"></i></label><input type="text" class="num-input" id="expName" value="workshop-export" placeholder="filename"></div>
-          <div class="panel-hint" style="padding:8px 0 0;">Padding adds an empty ring (transparent, or background-colored) around the exported image.</div>
+          <div class="panel-hint" style="padding:8px 0 0;">Padding adds an empty ring (transparent, or background-colored) around the exported image. SVG exports true vector structure — every layer stays editable in Figma &amp; Inkscape.</div>
         </div></div>
       </div>
 
@@ -1261,11 +1262,7 @@ function createGradientLayer() {
 }
 
 /* ============================================================
-   ICON LIBRARY — compact starter list + smart cache:
-   the full 2,234-icon library is fetched once online and
-   saved to localStorage, then loads instantly forever
-   (even offline). The starter list below is just the safety
-   net for the very first load.
+   ICON LIBRARY — compact starter list + smart localStorage cache
    ============================================================ */
 const POPULAR_ICONS = [
   'favorite', 'star', 'home', 'mail', 'send', 'person', 'people', 'shopping_cart',
@@ -1407,7 +1404,6 @@ function addStampLayer(c, name, x, y) {
 }
 
 (function loadIconLibrary() {
-  // 1) INSTANT: full library from cache (if available)
   try {
     const cached = localStorage.getItem('workshop_icon_cache');
     if (cached) {
@@ -1420,8 +1416,6 @@ function addStampLayer(c, name, x, y) {
       }
     }
   } catch (e) {}
-
-  // 2) ONLINE: fetch fresh official list and cache it
   if (document.fonts && document.fonts.load) {
     document.fonts.load('24px "Material Icons"').then(() => buildIconGrid()).catch(() => {});
   }
@@ -2499,6 +2493,7 @@ function updateExportUI() {
   document.getElementById('expPng').classList.toggle('active', f === 'png');
   document.getElementById('expJpg').classList.toggle('active', f === 'jpeg');
   document.getElementById('expWebp').classList.toggle('active', f === 'webp');
+  document.getElementById('expSvg').classList.toggle('active', f === 'svg');
   const k = state.export.scale;
   document.getElementById('exp1x').classList.toggle('active', k === 1);
   document.getElementById('exp2x').classList.toggle('active', k === 2);
@@ -2508,11 +2503,12 @@ function updateExportUI() {
   document.getElementById('expTransparent').disabled = (f === 'jpeg');
   const showBg = f === 'jpeg' || !state.export.transparent;
   document.getElementById('expBgRow').style.display = showBg ? 'block' : 'none';
-  document.getElementById('expQualityRow').style.display = f === 'png' ? 'none' : 'flex';
+  document.getElementById('expQualityRow').style.display = (f === 'png' || f === 'svg') ? 'none' : 'flex';
 }
 document.getElementById('expPng').addEventListener('click', () => { state.export.format = 'png'; updateExportUI(); });
 document.getElementById('expJpg').addEventListener('click', () => { state.export.format = 'jpeg'; updateExportUI(); });
 document.getElementById('expWebp').addEventListener('click', () => { state.export.format = 'webp'; updateExportUI(); });
+document.getElementById('expSvg').addEventListener('click', () => { state.export.format = 'svg'; updateExportUI(); });
 document.getElementById('exp1x').addEventListener('click', () => { state.export.scale = 1; updateExportUI(); });
 document.getElementById('exp2x').addEventListener('click', () => { state.export.scale = 2; updateExportUI(); });
 document.getElementById('exp3x').addEventListener('click', () => { state.export.scale = 3; updateExportUI(); });
@@ -2531,7 +2527,7 @@ document.getElementById('expPadding').addEventListener('input', e => {
   updateSliderFill('expPadding');
 });
 
-/* ---------------- Export (with padding) ---------------- */
+/* ---------------- Export (PNG / JPEG / WebP / SVG, with padding) ---------------- */
 document.getElementById('exportBtn').addEventListener('click', () => {
   const layers = state.layers.filter(l => hasContent(l) && l.opacity > 0.02).sort((a, b) => a.z - b.z);
   if (layers.length === 0) { toast('Nothing to export', 'fa-triangle-exclamation'); return; }
@@ -2564,6 +2560,49 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   const ew = cw + pad * 2, eh = ch + pad * 2;
   const offX = pad - cx0, offY = pad - cy0;
 
+  /* ---- SVG EXPORT: true vector structure with embedded layer images ---- */
+  if (f === 'svg') {
+    const r2 = n => Math.round(n * 100) / 100;
+    let defs = '', body = '', fid = 0;
+    for (const l of layers) {
+      let src = l.canvasEl ? l.canvasEl.toDataURL('image/png') : l.src;
+      const a = l.adjust;
+      const adj = a && (a.brightness !== 100 || a.contrast !== 100 || a.saturate !== 100 || a.hue > 0 || a.blur > 0 || a.grayscale > 0 || a.sepia > 0);
+      if (adj) {
+        const t = document.createElement('canvas');
+        t.width = Math.max(1, Math.round(l.w)); t.height = Math.max(1, Math.round(l.h));
+        const tc = t.getContext('2d');
+        tc.filter = cssFilter(a).join(' ');
+        tc.drawImage(l.canvasEl || l.imgEl, 0, 0, l.w, l.h);
+        src = t.toDataURL('image/png');
+      }
+      const cx = l.x + l.w / 2 - cx0 + pad, cy = l.y + l.h / 2 - cy0 + pad;
+      const sx = l.scale * (l.flipX ? -1 : 1), sy = l.scale * (l.flipY ? -1 : 1);
+      let filt = '';
+      const s = l.shadow;
+      if (s && s.opacity > 0) {
+        fid++;
+        defs += `<filter id="sh${fid}" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="${r2(s.x)}" dy="${r2(s.y)}" stdDeviation="${r2(Math.max(0, s.blur / 2))}" flood-color="${s.color}" flood-opacity="${s.opacity}"/></filter>`;
+        filt = ` filter="url(#sh${fid})"`;
+      }
+      const blend = (l.blend && l.blend !== 'normal') ? ` style="mix-blend-mode:${l.blend}"` : '';
+      body += `<g transform="translate(${r2(cx)} ${r2(cy)}) rotate(${r2(l.rotation)}) scale(${r2(sx)} ${r2(sy)})" opacity="${l.opacity}"${blend}${filt}><image x="${r2(-l.w / 2)}" y="${r2(-l.h / 2)}" width="${r2(l.w)}" height="${r2(l.h)}" href="${src}" preserveAspectRatio="none"/></g>`;
+    }
+    let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.round(ew * k)}" height="${Math.round(eh * k)}" viewBox="0 0 ${ew} ${eh}">`;
+    if (!transparent) svg += `<rect x="0" y="0" width="${ew}" height="${eh}" fill="${state.export.bg}"/>`;
+    svg += `<defs>${defs}</defs>${body}</svg>`;
+    const fn = (document.getElementById('expName').value || 'workshop-export').replace(/[\\/:*?"<>|]/g, '').trim() || 'workshop-export';
+    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+    const link = document.createElement('a');
+    link.download = `${fn}.svg`;
+    link.href = URL.createObjectURL(blob);
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 2000);
+    toast(`Exported ${Math.round(ew * k)} × ${Math.round(eh * k)} SVG`, 'fa-download');
+    return;
+  }
+
+  /* ---- Raster export (PNG / JPEG / WebP) ---- */
   const out = document.createElement('canvas');
   out.width = Math.max(1, Math.round(ew * k));
   out.height = Math.max(1, Math.round(eh * k));

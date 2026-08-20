@@ -28,7 +28,10 @@
         3       Also includes minor wording/comment cleanups in document and history hints.
         4       Expands the shape workflow into a shape/icon stamping tool with rectangle, iOS squircle, circle, and Material Icons support, including searchable icon picking, drag-preview stamping, and cached icon library loading. 
         5       It also adds hue-rotate as a new layer adjustment control and wires it through filter rendering, updates related tool UI/labels, and resets the new icon state correctly in full reset.
-
+        5       Adds SVG as a fourth export format in the UI and wires it into export state handling. 
+        6       The export flow now generates SVG output with preserved layer transforms, opacity, blend modes, drop shadows, optional background fill, and embedded layer images (including adjustment filters baked per layer when needed). 
+        7       The export UI was also updated so quality controls are hidden for SVG, and helper copy/comments were refined to reflect the new behavior.
+ 
 ---------------------------------
 
 ### Updated 19 Aug 2026
