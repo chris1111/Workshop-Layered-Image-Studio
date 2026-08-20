@@ -271,6 +271,7 @@
               <div class="slider-label"><span>Size</span><span id="sizeVal">40px</span></div>
               <input type="range" id="sizeSlider" min="1" max="150" value="40">
             </div>
+
             <div id="brushSettings" style="display:none;">
               <div class="slider-row">
                 <div class="slider-label"><span>Color</span></div>
@@ -282,6 +283,7 @@
                 <button class="btn" id="brushSquare"><i class="fa-solid fa-square"></i> Square</button>
               </div>
             </div>
+
             <div id="shapeSettings" style="display:none;">
               <div class="slider-row">
                 <div class="slider-label"><span>Fill Color</span></div>
@@ -293,6 +295,7 @@
                 <button class="btn" id="shapeCircle"><i class="fa-solid fa-circle"></i> Circle</button>
               </div>
             </div>
+
             <div id="gradientSettings" style="display:none;">
               <div class="slider-row">
                 <div class="slider-label"><span>Color 1</span></div>
@@ -311,6 +314,7 @@
                 <i class="fa-solid fa-plus"></i> Create Gradient Layer
               </button>
             </div>
+
             <button class="btn" id="resetEraserBtn" style="width:100%;padding:7px;font-size:12px;justify-content:center;margin-top:12px;">
               <i class="fa-solid fa-rotate-left"></i> Restore Layer Original
             </button>
@@ -469,7 +473,7 @@
             <button class="btn" id="applyDocBtn"><i class="fa-solid fa-check"></i> Apply Size</button>
             <button class="btn" id="centerContentBtn"><i class="fa-solid fa-arrows-to-dot"></i> Center All</button>
           </div>
-          <div class="panel-hint" style="padding:8px 0 0;">Crop tool (C): drag a region, then Apply (Enter) or Cancel (Esc). Export always matches what you see — content outside the document is trimmed.</div>
+          <div class="panel-hint" style="padding:8px 0 0;">The document auto-grows when you scale / rotate / resize a layer beyond its edges (nothing is ever lost). Once you set a preset, a custom size or apply a crop, the frame is fixed and content clips at it.</div>
         </div></div>
       </div>
 
@@ -559,6 +563,8 @@ const WEBP_OK = document.createElement('canvas').toDataURL('image/webp').indexOf
 
 const state = {
   doc: { w: 1000, h: 700 },
+  docLocked: false, // true = fixed frame (preset / custom size / crop / loaded project): content clips at it
+  needFit: false,   // one-shot flag: refit the view after a live document growth
   layers: [], selectedId: null, zCounter: 1, layerIdCounter: 0,
   isDragging: false, isResizing: false, isRotating: false,
   isErasing: false, isDrawing: false, isDrawingShape: false, dragMoved: false,
@@ -592,6 +598,7 @@ const paintHint = document.getElementById('paintHint');
 const toastContainer = document.getElementById('toastContainer');
 
 function sel() { return state.layers.find(l => l.id === state.selectedId); }
+function hasContent(l) { return !!(l.imgEl || l.canvasEl); }
 
 /* ---------------- Collapsible sections ---------------- */
 const userCollapsed = {};
@@ -644,6 +651,42 @@ function setDocSize(w, h) {
   applyView();
 }
 
+/* ============================================================
+   FIX — "I scale an image and lose most of it".
+   Since the crop fix, the document is a hard clipping frame.
+   Scaling a layer past the frame's edges cut it on screen AND
+   in the export. Now the document AUTO-GROWS to contain any
+   layer pushed past its edges by Scale / Rotation / Resize
+   (same philosophy as the drop auto-fit). If content reaches
+   into negative coordinates, everything is shifted so the
+   content stays inside — relative positions preserved.
+   Deliberate frames (preset / custom size / crop / loaded
+   project) are LOCKED and respected: content clips at them.
+   ============================================================ */
+function growDocToContainLayer(l) {
+  if (state.docLocked || !l) return false;
+  const b = layerBBox(l, false);
+  let dx = 0, dy = 0;
+  if (b.minX < 0) dx = Math.ceil(-b.minX);
+  if (b.minY < 0) dy = Math.ceil(-b.minY);
+  const needW = Math.max(state.doc.w + dx, Math.ceil(b.maxX) + dx);
+  const needH = Math.max(state.doc.h + dy, Math.ceil(b.maxY) + dy);
+  if (!dx && !dy && needW === state.doc.w && needH === state.doc.h) return false;
+  if (dx || dy) {
+    state.layers.forEach(x => { x.x += dx; x.y += dy; updateLayerTransform(x); });
+    if (dx) state.guides.v = state.guides.v.map(g => g + dx);
+    if (dy) state.guides.h = state.guides.h.map(g => g + dy);
+    renderGuides();
+  }
+  setDocSize(needW, needH);
+  document.getElementById('docPreset').value = 'custom';
+  const s = sel(); if (s) updatePositionInputs(s);
+  return true;
+}
+function flushNeedFit() {
+  if (state.needFit) { state.needFit = false; fitView(); }
+}
+
 /* ---------------- View: zoom + pan ---------------- */
 function applyView() {
   const r = canvasCard.getBoundingClientRect();
@@ -691,10 +734,11 @@ function layerBBox(l, padShadow) {
   return { minX, minY, maxX, maxY };
 }
 
-function contentBBox() {
+function contentBBox(list) {
+  const layers = list || state.layers;
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  for (const l of state.layers) {
-    if (!l.imgEl || l.opacity < 0.02) continue;
+  for (const l of layers) {
+    if (!hasContent(l) || l.opacity < 0.02) continue;
     const b = layerBBox(l, true);
     minX = Math.min(minX, b.minX); minY = Math.min(minY, b.minY);
     maxX = Math.max(maxX, b.maxX); maxY = Math.max(maxY, b.maxY);
@@ -703,10 +747,10 @@ function contentBBox() {
 }
 
 function fitView() {
-  const layers = state.layers.filter(l => l.imgEl && l.opacity > 0.02);
+  const layers = state.layers.filter(l => hasContent(l) && l.opacity > 0.02);
   state.view.px = 0; state.view.py = 0;
   if (!layers.length) { setZoom(1); return; }
-  const { minX, minY, maxX, maxY } = contentBBox();
+  const { minX, minY, maxX, maxY } = contentBBox(layers);
   const r = canvasCard.getBoundingClientRect();
   const base = Math.min(r.width / state.doc.w, r.height / state.doc.h);
   const ox = Math.abs((minX + maxX) / 2 - state.doc.w / 2) + Math.max(1, maxX - minX) / 2;
@@ -838,7 +882,7 @@ function cssFilter(a) {
   return parts;
 }
 
-/* ---------------- History ---------------- */
+/* ---------------- History (now remembers the document size too) ---------------- */
 function snapshot() {
   return state.layers.map(l => {
     let canvasData = null, maskData = null, baseData = null;
@@ -846,16 +890,20 @@ function snapshot() {
       if (l.canvasEl) canvasData = l.canvasEl.toDataURL();
       if (l.maskCanvas) { maskData = l.maskCanvas.toDataURL(); if (l.baseCanvas) baseData = l.baseCanvas.toDataURL(); }
     } catch (e) {}
-    return { id: l.id, src: l.src, name: l.name, type: l.type || 'image', text: l.text ? { ...l.text } : null, x: l.x, y: l.y, w: l.w, h: l.h, rotation: l.rotation, opacity: l.opacity, scale: l.scale, z: l.z, aspect: l.aspect, flipX: !!l.flipX, flipY: !!l.flipY, blend: l.blend || 'normal', adjust: { ...(l.adjust || NEUTRAL) }, shadow: { ...l.shadow }, hasCanvas: !!l.canvasEl, canvasData, hasMask: !!l.maskCanvas, maskData, baseData };
+    return { id: l.id, src: l.src, name: l.name, type: l.type || 'image', text: l.text ? { ...l.text } : null, textNat: l.textNat ? { ...l.textNat } : null, x: l.x, y: l.y, w: l.w, h: l.h, rotation: l.rotation, opacity: l.opacity, scale: l.scale, z: l.z, aspect: l.aspect, flipX: !!l.flipX, flipY: !!l.flipY, blend: l.blend || 'normal', adjust: { ...(l.adjust || NEUTRAL) }, shadow: { ...l.shadow }, hasCanvas: !!l.canvasEl, canvasData, hasMask: !!l.maskCanvas, maskData, baseData };
   });
 }
+function historyEntry() { return { docW: state.doc.w, docH: state.doc.h, layers: snapshot() }; }
 function saveHistory() {
-  state.history.push(snapshot());
+  state.history.push(historyEntry());
   if (state.history.length > 20) state.history.shift();
   state.redo.length = 0;
 }
 
-async function restoreFromHistory(snap) {
+async function restoreFromHistory(entry) {
+  // accepts both the new envelope {docW, docH, layers} and legacy plain arrays
+  const snap = Array.isArray(entry) ? entry : (entry && Array.isArray(entry.layers) ? entry.layers : []);
+  if (!Array.isArray(entry) && entry && entry.docW) setDocSize(entry.docW, entry.docH);
   state.layers.forEach(l => { const el = document.querySelector(`[data-layer-id="${l.id}"]`); if (el) el.remove(); });
   state.layers = []; state.selectedId = null; state.zCounter = 0; state.layerIdCounter = 0;
   for (const l of snap) {
@@ -907,7 +955,7 @@ async function restoreFromHistory(snap) {
 async function undoAction() {
   if (state.history.length === 0) { toast('Nothing to undo', 'fa-circle-info'); return; }
   document.getElementById('statusText').textContent = 'Undoing...';
-  state.redo.push(snapshot());
+  state.redo.push(historyEntry());
   await restoreFromHistory(state.history.pop());
   document.getElementById('statusText').textContent = 'Ready';
   toast('Undo', 'fa-rotate-left');
@@ -915,7 +963,7 @@ async function undoAction() {
 async function redoAction() {
   if (state.redo.length === 0) { toast('Nothing to redo', 'fa-circle-info'); return; }
   document.getElementById('statusText').textContent = 'Redoing...';
-  state.history.push(snapshot());
+  state.history.push(historyEntry());
   await restoreFromHistory(state.redo.pop());
   document.getElementById('statusText').textContent = 'Ready';
   toast('Redo', 'fa-rotate-right');
@@ -1045,7 +1093,7 @@ function createTextLayer() {
     z: ++state.zCounter, imgEl: null, aspect: 1,
     flipX: false, flipY: false, blend: 'normal',
     adjust: { ...NEUTRAL }, canvasEl: null, canvasCtx: null, src: null,
-    baseCanvas: null, maskCanvas: null,
+    textNat: null, baseCanvas: null, maskCanvas: null,
     shadow: { x: 0, y: 0, blur: 0, opacity: 0.0, color: '#000000' }
   };
   renderTextLayer(layer);
@@ -1072,8 +1120,16 @@ function renderTextLayer(layer) {
   const ctx = c.getContext('2d');
   ctx.font = font; ctx.fillStyle = t.color; ctx.textBaseline = 'top';
   lines.forEach((ln, i) => ctx.fillText(ln, pad, pad + i * t.size * 1.3));
-  if (layer.w) { layer.x += (layer.w - w) / 2; layer.y += (layer.h - h) / 2; }
-  layer.w = w; layer.h = h; layer.aspect = w / h;
+  const ratio = (layer.textNat && layer.textNat.w > 0) ? (layer.w / layer.textNat.w) : 1;
+  if (layer.w) {
+    const cx = layer.x + layer.w / 2, cy = layer.y + layer.h / 2;
+    layer.x = Math.round(cx - (w * ratio) / 2);
+    layer.y = Math.round(cy - (h * ratio) / 2);
+  }
+  layer.textNat = { w, h };
+  layer.w = Math.max(1, Math.round(w * ratio));
+  layer.h = Math.max(1, Math.round(h * ratio));
+  layer.aspect = layer.w / layer.h;
   layer.canvasEl = c; layer.canvasCtx = ctx;
   layer.src = c.toDataURL('image/png');
   const img = new Image(); img.onload = () => { layer.imgEl = img; updateLayerList(); }; img.src = layer.src;
@@ -1089,9 +1145,12 @@ function applyTextProps() {
   l.text.italic = document.getElementById('txtItalic').classList.contains('active');
   renderTextLayer(l); renderLayer(l);
   updatePositionInputs(l); updateSizeInputs(l);
+  if (growDocToContainLayer(l)) state.needFit = true;
 }
 ['txtContent', 'txtFont', 'txtSize', 'txtColor'].forEach(id =>
   document.getElementById(id).addEventListener('input', applyTextProps));
+['txtContent', 'txtFont', 'txtSize', 'txtColor'].forEach(id =>
+  document.getElementById(id).addEventListener('change', flushNeedFit));
 document.getElementById('txtBold').addEventListener('click', () => { document.getElementById('txtBold').classList.toggle('active'); applyTextProps(); });
 document.getElementById('txtItalic').addEventListener('click', () => { document.getElementById('txtItalic').classList.toggle('active'); applyTextProps(); });
 
@@ -1118,7 +1177,7 @@ function populateTextPanel(layer) {
 /* ---------------- Masks ---------------- */
 function addMaskToLayer(l) {
   if (l.maskCanvas) return;
-  if (!l.imgEl && !l.canvasEl) { toast('Select a layer first', 'fa-triangle-exclamation'); return; }
+  if (!hasContent(l)) { toast('Select a layer first', 'fa-triangle-exclamation'); return; }
   saveHistory();
   l.baseCanvas = document.createElement('canvas');
   l.baseCanvas.width = Math.max(1, Math.round(l.w)); l.baseCanvas.height = Math.max(1, Math.round(l.h));
@@ -1241,6 +1300,7 @@ function applyCrop() {
   state.guides.h = state.guides.h.map(g => Math.round(g - y)).filter(g => g > 0 && g < h);
   renderGuides();
   setDocSize(w, h);
+  state.docLocked = true; // a crop is a deliberate frame — respect it afterwards
   document.getElementById('docPreset').value = 'custom';
   state.crop = null; state.cropDrag = null;
   updateCropUI(); fitView();
@@ -1362,13 +1422,20 @@ document.addEventListener('mouseup', (e) => {
     }
   }
 
-  const wasResizing = state.isResizing;
+  const wasResizing = state.isResizing, wasRotating = state.isRotating;
   if (state.isDragging || state.isResizing || state.isRotating) {
     state.isDragging = false; state.isResizing = false; state.isRotating = false; state.resizeHandle = null; state.dragMoved = false;
     document.body.style.cursor = '';
     document.querySelectorAll('.layer.dragging').forEach(el => el.classList.remove('dragging'));
   }
-  if (wasResizing) { const l = sel(); if (l) resampleBitmaps(l); }
+  // FIX: after a handle resize / rotation, make sure the document still contains the layer
+  if (wasResizing || wasRotating) {
+    const l = sel();
+    if (l) {
+      if (wasResizing) resampleBitmaps(l);
+      if (growDocToContainLayer(l)) fitView();
+    }
+  }
 });
 
 function resampleBitmaps(l) {
@@ -1398,7 +1465,7 @@ function addImageLayer(src, name, targetSlot = null) {
         targetSlot.name = name || targetSlot.name;
         layer = targetSlot;
       } else {
-        if (w > state.doc.w || h > state.doc.h) {
+        if (!state.docLocked && (w > state.doc.w || h > state.doc.h)) {
           setDocSize(Math.max(state.doc.w, w), Math.max(state.doc.h, h));
           document.getElementById('docPreset').value = 'custom';
           toast(`Document enlarged to ${state.doc.w} × ${state.doc.h} to show the full image`, 'fa-up-right-and-down-left-from-center');
@@ -1410,7 +1477,7 @@ function addImageLayer(src, name, targetSlot = null) {
           w, h, rotation: 0, opacity: 1, scale: 1,
           z: ++state.zCounter, imgEl: img, aspect: w / h,
           flipX: false, flipY: false, blend: 'normal',
-          adjust: { ...NEUTRAL }, text: null,
+          adjust: { ...NEUTRAL }, text: null, textNat: null,
           canvasEl: null, canvasCtx: null, baseCanvas: null, maskCanvas: null,
           shadow: { x: 0, y: 0, blur: 0, opacity: 0.0, color: '#000000' }
         };
@@ -1434,7 +1501,7 @@ function renderLayer(layer) {
   }
   const oldCanvas = el.querySelector('canvas'); if (oldCanvas) oldCanvas.remove();
   const oldImg = el.querySelector('img'); if (oldImg) oldImg.remove();
-  if (layer.imgEl || layer.canvasEl) {
+  if (hasContent(layer)) {
     if (layer.canvasEl) { el.appendChild(layer.canvasEl); } else { const img = document.createElement('img'); img.draggable = false; el.appendChild(img); img.src = layer.src; }
     el.classList.remove('placeholder');
   } else { el.classList.add('placeholder'); }
@@ -1464,7 +1531,7 @@ function attachLayerEvents(el, layer) {
     if (state.spaceDown || e.button === 1) return;
     if (state.activeTool === 'crop') { e.stopPropagation(); startCropDrag(e); return; }
     e.stopPropagation(); selectLayer(layer.id);
-    if (!layer.imgEl) return;
+    if (!hasContent(layer)) return;
     if (state.activeTool === 'eraser') { saveHistory(); state.isErasing = true; eraseAtPos(e.clientX, e.clientY); return; }
     if (state.activeTool === 'brush') {
       saveHistory(); state.isDrawing = true;
@@ -1493,7 +1560,7 @@ function attachLayerEvents(el, layer) {
 }
 
 function startDrag(e, layer) {
-  if (!layer.imgEl) return;
+  if (!hasContent(layer)) return;
   state.isDragging = true; state.dragMoved = false;
   state.dragStart = { x: e.clientX, y: e.clientY, lx: layer.x, ly: layer.y };
   const el = document.querySelector(`[data-layer-id="${layer.id}"]`);
@@ -1606,7 +1673,7 @@ function updateLayerList() {
   layerCount.textContent = state.layers.length;
   const sorted = [...state.layers].sort((a, b) => b.z - a.z);
   layersList.innerHTML = sorted.map((layer, idx) => {
-    const isFirst = idx === 0, isLast = idx === sorted.length - 1, isEmpty = !layer.imgEl && !layer.canvasEl;
+    const isFirst = idx === 0, isLast = idx === sorted.length - 1, isEmpty = !hasContent(layer);
     let thumbSrc = '';
     if (!isEmpty) { if (layer.canvasEl) { try { thumbSrc = layer.canvasEl.toDataURL(); } catch (e) { thumbSrc = layer.src; } } else thumbSrc = layer.src; }
     const thumbBg = isEmpty ? '' : `background-image:url('${thumbSrc}')`;
@@ -1686,7 +1753,7 @@ function deleteLayer(id) {
 
 function duplicateLayer(id) {
   saveHistory(); const layer = state.layers.find(l => l.id === id); if (!layer) return;
-  const newLayer = { ...layer, id: ++state.layerIdCounter, x: layer.x + 24, y: layer.y + 24, z: ++state.zCounter, name: layer.name + ' copy', canvasEl: null, canvasCtx: null, baseCanvas: null, maskCanvas: null, adjust: { ...(layer.adjust || NEUTRAL) }, text: layer.text ? { ...layer.text } : null, shadow: { ...layer.shadow } };
+  const newLayer = { ...layer, id: ++state.layerIdCounter, x: layer.x + 24, y: layer.y + 24, z: ++state.zCounter, name: layer.name + ' copy', canvasEl: null, canvasCtx: null, baseCanvas: null, maskCanvas: null, adjust: { ...(layer.adjust || NEUTRAL) }, text: layer.text ? { ...layer.text } : null, textNat: layer.textNat ? { ...layer.textNat } : null, shadow: { ...layer.shadow } };
   if (layer.canvasEl) {
     newLayer.canvasEl = document.createElement('canvas');
     newLayer.canvasEl.width = layer.canvasEl.width; newLayer.canvasEl.height = layer.canvasEl.height;
@@ -1774,7 +1841,7 @@ function makeLayerFromCanvas(r, name, z) {
     id: ++state.layerIdCounter, type: 'image', src: dataUrl, name,
     x: Math.round(r.minX), y: Math.round(r.minY), w: r.w, h: r.h,
     rotation: 0, opacity: 1, scale: 1, z,
-    flipX: false, flipY: false, blend: 'normal', adjust: { ...NEUTRAL }, text: null,
+    flipX: false, flipY: false, blend: 'normal', adjust: { ...NEUTRAL }, text: null, textNat: null,
     imgEl: null, aspect: r.w / r.h,
     canvasEl: r.canvas, canvasCtx: r.ctx, baseCanvas: null, maskCanvas: null,
     shadow: { x: 0, y: 0, blur: 0, opacity: 0, color: '#000000' }
@@ -1790,7 +1857,7 @@ function mergeDown() {
   const idx = sorted.findIndex(x => x.id === l.id);
   if (idx === sorted.length - 1) { toast('No layer below to merge with', 'fa-triangle-exclamation'); return; }
   const below = sorted[idx + 1];
-  if ((!below.imgEl && !below.canvasEl) || (!l.imgEl && !l.canvasEl)) { toast('Cannot merge empty layers', 'fa-triangle-exclamation'); return; }
+  if (!hasContent(below) || !hasContent(l)) { toast('Cannot merge empty layers', 'fa-triangle-exclamation'); return; }
   saveHistory();
   const r = renderLayersToCanvas([below, l]);
   [l.id, below.id].forEach(id => { const el = document.querySelector(`[data-layer-id="${id}"]`); if (el) el.remove(); });
@@ -1801,7 +1868,7 @@ function mergeDown() {
 }
 
 function flattenAll() {
-  const layers = state.layers.filter(x => (x.imgEl || x.canvasEl) && x.opacity > 0.02).sort((a, b) => a.z - b.z);
+  const layers = state.layers.filter(x => hasContent(x) && x.opacity > 0.02).sort((a, b) => a.z - b.z);
   if (layers.length === 0) { toast('Nothing to flatten', 'fa-triangle-exclamation'); return; }
   saveHistory();
   const r = renderLayersToCanvas(layers);
@@ -1932,36 +1999,40 @@ document.getElementById('resetBtn').addEventListener('click', () => {
 });
 
 /* ---------------- Transform inputs ---------------- */
-function bindNum(id, apply) {
+function bindNum(id, apply, after) {
   const el = document.getElementById(id);
   el.addEventListener('input', () => {
     const l = sel(); if (!l) return;
     apply(l, parseFloat(el.value) || 0);
     updateLayerTransform(l);
+    if (after) after(l);
   });
+  el.addEventListener('change', flushNeedFit);
 }
 bindNum('posX', (l, v) => l.x = v);
 bindNum('posY', (l, v) => l.y = v);
-bindNum('sizeW', (l, v) => { l.w = Math.max(1, v); if (state.lockAspect) l.h = Math.round(l.w / l.aspect); updateSizeInputs(l); });
-bindNum('sizeH', (l, v) => { l.h = Math.max(1, v); if (state.lockAspect) l.w = Math.round(l.h * l.aspect); updateSizeInputs(l); });
+bindNum('sizeW', (l, v) => { l.w = Math.max(1, v); if (state.lockAspect) l.h = Math.round(l.w / l.aspect); updateSizeInputs(l); }, l => { if (growDocToContainLayer(l)) state.needFit = true; });
+bindNum('sizeH', (l, v) => { l.h = Math.max(1, v); if (state.lockAspect) l.w = Math.round(l.h * l.aspect); updateSizeInputs(l); }, l => { if (growDocToContainLayer(l)) state.needFit = true; });
 bindNum('shadowX', (l, v) => l.shadow.x = v);
 bindNum('shadowY', (l, v) => l.shadow.y = v);
 document.getElementById('lockAspect').addEventListener('change', e => state.lockAspect = e.target.checked);
 
-function bindSlider(id, labelId, fmt, apply) {
+function bindSlider(id, labelId, fmt, apply, after) {
   const s = document.getElementById(id);
   s.addEventListener('pointerdown', () => { if (sel()) saveHistory(); });
   s.addEventListener('input', () => {
     const v = parseFloat(s.value);
     const l = sel();
-    if (l) { apply(l, v); updateLayerTransform(l); }
+    if (l) { apply(l, v); updateLayerTransform(l); if (after) after(l); }
     document.getElementById(labelId).textContent = fmt(v);
     updateSliderFill(id);
   });
+  s.addEventListener('change', flushNeedFit);
 }
 bindSlider('opacitySlider', 'opacityVal', v => v + '%', (l, v) => l.opacity = v / 100);
-bindSlider('scaleSlider', 'scaleVal', v => v + '%', (l, v) => l.scale = v / 100);
-bindSlider('rotateSlider', 'rotateVal', v => v + '°', (l, v) => l.rotation = v);
+// FIX: Scale / Rotation now auto-grow the document instead of clipping the layer
+bindSlider('scaleSlider', 'scaleVal', v => v + '%', (l, v) => l.scale = v / 100, l => { if (growDocToContainLayer(l)) state.needFit = true; });
+bindSlider('rotateSlider', 'rotateVal', v => v + '°', (l, v) => l.rotation = v, l => { if (growDocToContainLayer(l)) state.needFit = true; });
 bindSlider('shadowBlur', 'shadowBlurVal', v => v + 'px', (l, v) => l.shadow.blur = v);
 bindSlider('shadowOpacity', 'shadowOpacityVal', v => v + '%', (l, v) => l.shadow.opacity = v / 100);
 document.getElementById('shadowColor').addEventListener('input', e => { const l = sel(); if (l) { l.shadow.color = e.target.value; updateLayerTransform(l); } });
@@ -2043,21 +2114,23 @@ document.getElementById('docPreset').addEventListener('change', e => {
   const v = e.target.value;
   if (v === 'custom') return;
   const [w, h] = v.split('x').map(Number);
+  state.docLocked = true; // deliberate frame — content will clip at it
   setDocSize(w, h); fitView();
-  toast(`Document set to ${w} × ${h}`, 'fa-file');
+  toast(`Document set to ${w} × ${h} — frame locked, content clips at it`, 'fa-file');
 });
 document.getElementById('applyDocBtn').addEventListener('click', () => {
   const w = parseInt(document.getElementById('docW').value) || 1000;
   const h = parseInt(document.getElementById('docH').value) || 700;
   document.getElementById('docPreset').value = 'custom';
+  state.docLocked = true; // deliberate frame
   setDocSize(w, h); fitView();
-  toast(`Document set to ${w} × ${h}`, 'fa-file');
+  toast(`Document set to ${w} × ${h} — frame locked, content clips at it`, 'fa-file');
 });
 document.getElementById('centerContentBtn').addEventListener('click', () => {
-  const layers = state.layers.filter(l => l.imgEl || l.canvasEl);
+  const layers = state.layers.filter(l => hasContent(l));
   if (!layers.length) { toast('Nothing to center', 'fa-triangle-exclamation'); return; }
   saveHistory();
-  const b = contentBBox();
+  const b = contentBBox(layers);
   const dx = state.doc.w - (b.minX + b.maxX) / 2, dy = state.doc.h - (b.minY + b.maxY) / 2;
   state.layers.forEach(l => { l.x += dx; l.y += dy; updateLayerTransform(l); });
   const l = sel(); if (l) updatePositionInputs(l);
@@ -2144,12 +2217,13 @@ document.getElementById('clearBtn').addEventListener('click', () => {
 
 /* ---------------- Reset all ---------------- */
 document.getElementById('resetAllBtn').addEventListener('click', () => {
-  if (!confirm('Reset everything?\n\n• All layers removed (recoverable with Undo)\n• Document back to 1000 × 700\n• Guides, grid and view reset\n• Export & tool settings back to defaults')) return;
+  if (!confirm('Reset everything?\n\n• All layers removed (recoverable with Undo)\n• Document back to 1000 × 700 (auto-grow re-enabled)\n• Guides, grid and view reset\n• Export & tool settings back to defaults')) return;
   saveHistory();
   state.crop = null; state.cropDrag = null; updateCropUI();
   state.layers.forEach(l => { const el = document.querySelector(`[data-layer-id="${l.id}"]`); if (el) el.remove(); });
   state.layers = []; state.selectedId = null;
   document.getElementById('docPreset').value = '1000x700';
+  state.docLocked = false; state.needFit = false;
   setDocSize(1000, 700);
   state.view.px = 0; state.view.py = 0; setZoom(1);
   state.guides = { v: [], h: [] }; renderGuides();
@@ -2218,15 +2292,9 @@ document.getElementById('expQuality').addEventListener('input', e => {
   updateSliderFill('expQuality');
 });
 
-/* ============================================================
-   EXPORT — FIX: the exported image is now CLIPPED to the
-   document rectangle. Content outside the document (leftovers
-   hidden after a crop, or layers dragged off-canvas) is trimmed,
-   so the download always matches what you see on screen.
-   A single centered image still exports at its own size.
-   ============================================================ */
+/* ---------------- Export ---------------- */
 document.getElementById('exportBtn').addEventListener('click', () => {
-  const layers = state.layers.filter(l => (l.imgEl || l.canvasEl) && l.opacity > 0.02).sort((a, b) => a.z - b.z);
+  const layers = state.layers.filter(l => hasContent(l) && l.opacity > 0.02).sort((a, b) => a.z - b.z);
   if (layers.length === 0) { toast('Nothing to export', 'fa-triangle-exclamation'); return; }
 
   const f = state.export.format, k = state.export.scale;
@@ -2242,9 +2310,7 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   if (state.export.bounds === 'doc') {
     ew = state.doc.w; eh = state.doc.h;
   } else {
-    const bb = contentBBox();
-    // FIX: intersect the content bounds with the document rectangle —
-    // anything outside the document is cropped away in the export.
+    const bb = contentBBox(layers);
     const x0 = Math.max(0, Math.floor(bb.minX));
     const y0 = Math.max(0, Math.floor(bb.minY));
     const x1 = Math.min(state.doc.w, Math.ceil(bb.maxX));
@@ -2253,7 +2319,6 @@ document.getElementById('exportBtn').addEventListener('click', () => {
       ew = Math.round(x1 - x0); eh = Math.round(y1 - y0);
       offX = -x0; offY = -y0;
     } else {
-      // all content is outside the document — export the empty document
       ew = state.doc.w; eh = state.doc.h;
     }
   }
@@ -2264,9 +2329,8 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   const ctx = out.getContext('2d');
   if (!transparent) { ctx.fillStyle = state.export.bg; ctx.fillRect(0, 0, out.width, out.height); }
   ctx.scale(k, k);
-  // FIX: hard clip to the export bounds — nothing outside can leak into the file
   ctx.beginPath();
-  ctx.rect(offX, offY, ew, eh);
+  ctx.rect(0, 0, ew, eh);
   ctx.clip();
   for (const l of layers) drawLayer(ctx, l, offX, offY);
 
@@ -2302,7 +2366,6 @@ projectInput.addEventListener('change', e => {
   if (f) loadProjectFromFile(f);
   projectInput.value = '';
 });
-
 function loadProjectFromFile(file) {
   const r = new FileReader();
   r.onload = () => {
@@ -2310,7 +2373,7 @@ function loadProjectFromFile(file) {
       const data = JSON.parse(r.result);
       if (!data || !Array.isArray(data.layers)) throw new Error('invalid');
       document.getElementById('statusText').textContent = 'Loading project...';
-      if (data.doc) { setDocSize(data.doc.w, data.doc.h); document.getElementById('docPreset').value = 'custom'; }
+      if (data.doc) { setDocSize(data.doc.w, data.doc.h); document.getElementById('docPreset').value = 'custom'; state.docLocked = true; }
       state.guides = (data.guides && typeof data.guides === 'object') ? { v: data.guides.v || [], h: data.guides.h || [] } : { v: [], h: [] };
       renderGuides();
       restoreFromHistory(data.layers).then(() => {
