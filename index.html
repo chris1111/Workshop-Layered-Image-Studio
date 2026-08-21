@@ -819,7 +819,7 @@ function updateGrid() {
   gridOverlay.style.backgroundSize = `${g.size}px ${g.size}px`;
 }
 
-/* ---------------- Rulers & guides ---------------- */
+/* ---------------- Rulers & guides (LEFT RULER FIX INCLUDED) ---------------- */
 function drawRulers() {
   const show = state.rulers;
   ['rulerTop', 'rulerLeft', 'rulerCorner'].forEach(id => document.getElementById(id).style.display = show ? 'block' : 'none');
@@ -859,7 +859,9 @@ function drawRulers() {
     const sy = docToScreenY(dy) - 18;
     if (sy < -30 || sy > lh + 30) continue;
     lc.beginPath(); lc.moveTo(18, sy + 0.5); lc.lineTo(11, sy + 0.5); lc.stroke();
-    lc.save(); lc.translate(3, sy - 4); lc.rotate(-Math.PI / 2); lc.fillText(String(Math.round(dy)), 0, 0); lc.restore();
+    /* FIX: translate(13) + textAlign 'center' — the numbers are now fully
+       visible on the left ruler (they were cut in half before). */
+    lc.save(); lc.translate(13, sy - 4); lc.rotate(-Math.PI / 2); lc.textAlign = 'center'; lc.fillText(String(Math.round(dy)), 0, 0); lc.restore();
   }
 }
 
@@ -1299,9 +1301,7 @@ function createGradientLayer() {
   toast('Gradient layer added', 'fa-fill-drip');
 }
 
-/* ============================================================
-   ICON LIBRARY — compact starter list + smart localStorage cache
-   ============================================================ */
+/* ---------------- ICON LIBRARY ---------------- */
 const POPULAR_ICONS = [
   'favorite', 'star', 'home', 'mail', 'send', 'person', 'people', 'shopping_cart',
   'lock', 'search', 'settings', 'check_circle', 'warning', 'info', 'help', 'close',
@@ -1705,7 +1705,7 @@ function resampleBitmaps(l) {
   if (had && l.canvasEl !== had) renderLayer(l);
 }
 
-/* ---------------- Add image — THE PRESET LANDS HERE ---------------- */
+/* ---------------- Add image — PRESET STYLE APPLIES HERE ---------------- */
 function addImageLayer(src, name, targetSlot = null) {
   return new Promise((resolve) => {
     const img = new Image(); img.crossOrigin = 'anonymous';
@@ -1728,8 +1728,6 @@ function addImageLayer(src, name, targetSlot = null) {
           canvasEl: null, canvasCtx: null, baseCanvas: null, maskCanvas: null,
           shadow: { x: 0, y: 0, blur: 0, opacity: 0.0, color: '#000000' }
         };
-        // ★ THE PRESET'S LAYER STYLE IS APPLIED TO THE NEW IMAGE HERE
-        //   (opacity, scale, rotation, blend, adjustments, shadow)
         const styled = applyPresetStyleToLayer(layer);
         if (!state.docLocked) {
           const effW = layer.w * layer.scale, effH = layer.h * layer.scale;
@@ -2471,7 +2469,7 @@ document.getElementById('clearBtn').addEventListener('click', () => {
   toast('Canvas cleared', 'fa-trash-can');
 });
 
-/* ---------------- Reset all (also clears the preset style) ---------------- */
+/* ---------------- Reset all ---------------- */
 document.getElementById('resetAllBtn').addEventListener('click', () => {
   if (!confirm('Reset everything?\n\n• All layers removed (recoverable with Undo)\n• Document, guides, grid and view reset\n• Export & tool settings back to defaults\n• Active preset cleared')) return;
   saveHistory();
@@ -2711,11 +2709,8 @@ function loadProjectFromFile(file) {
 
 /* ============================================================
    PRESETS — Save / Load EVERYTHING to a .json file:
-   app settings (export, document, tools, view) AND the full
-   layer style (opacity, scale, rotation, blend, adjustments,
-   shadow) captured from the SELECTED layer. After Load, every
-   newly uploaded image is created WITH that style — so you SEE
-   the preset on the canvas. File-based only, no startup magic.
+   app settings + full layer style (from selected layer).
+   After Load, every uploaded image arrives WITH the style.
    ============================================================ */
 function applyPresetStyleToLayer(layer) {
   const st = state.presetLayerStyle;
@@ -2735,8 +2730,6 @@ function updatePresetUI() {
   document.getElementById('presetInfo').textContent = n || 'none';
 }
 function capturePreset() {
-  // Layer style is taken from the SELECTED layer (the one you adjusted
-  // in the right-hand panel). Falls back to the active style if none.
   const sl = sel();
   let layerStyle = null;
   if (sl && hasContent(sl)) {
@@ -2925,7 +2918,7 @@ document.addEventListener('keyup', e => {
   if (e.code === 'Space') { state.spaceDown = false; canvasCard.classList.remove('pan-ready'); }
 });
 
-/* ---------------- Init (NO preset auto-load — Load manually) ---------------- */
+/* ---------------- Init (NO preset auto-load) ---------------- */
 window.addEventListener('resize', applyView);
 document.querySelectorAll('input[type=range]').forEach(s => updateSliderFill(s.id));
 setActiveTool('select');
