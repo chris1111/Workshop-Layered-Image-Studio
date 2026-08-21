@@ -65,6 +65,7 @@
   #gridOverlay { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 50; background-image: linear-gradient(to right, rgba(233,184,114,0.14) 1px, transparent 1px), linear-gradient(to bottom, rgba(233,184,114,0.14) 1px, transparent 1px); background-size: 50px 50px; }
   #iconPreview { position: absolute; display: none; align-items: center; justify-content: center; pointer-events: none; z-index: 48; border: 1.5px dashed var(--accent); }
   #iconPreview .material-icons { line-height: 1; }
+  #exportPadPreview { position: absolute; display: none; pointer-events: none; z-index: 47; border: 1.5px dashed rgba(91, 200, 255, 0.8); border-radius: 3px; box-shadow: 0 0 0 1px rgba(0,0,0,0.35); }
   #cropRect { position: absolute; display: none; z-index: 70; border: 1.5px dashed var(--accent); box-shadow: 0 0 0 100000px rgba(8,6,4,0.6); pointer-events: none; }
   #cropLabel { position: absolute; top: 4px; left: 4px; background: var(--accent); color: #1a1410; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; white-space: nowrap; font-variant-numeric: tabular-nums; }
   #cropBar { position: absolute; display: none; z-index: 71; gap: 6px; }
@@ -182,6 +183,7 @@
 </head>
 <body>
 <input type="file" id="projectInput" class="file-input" accept=".json,application/json">
+<input type="file" id="presetInput" class="file-input" accept=".json,application/json">
 
 <div class="app-grid">
   <header class="header">
@@ -238,6 +240,7 @@
         <div id="docStack">
           <div id="docBg"></div>
           <div id="docRoot"></div>
+          <div id="exportPadPreview"></div>
           <div id="iconPreview"><i class="material-icons" id="iconPreviewGlyph"></i></div>
           <div id="gridOverlay"></div>
         </div>
@@ -553,7 +556,7 @@
             <input type="color" id="expBg" value="#ffffff">
           </div>
           <div class="input-row" style="margin-top:10px;"><label style="width:auto;"><i class="fa-solid fa-file-lines" style="font-size:11px;"></i></label><input type="text" class="num-input" id="expName" value="workshop-export" placeholder="filename"></div>
-          <div class="panel-hint" style="padding:8px 0 0;">Padding adds an empty ring (transparent, or background-colored) around the exported image. SVG exports true vector structure — every layer stays editable in Figma &amp; Inkscape.</div>
+          <div class="panel-hint" style="padding:8px 0 0;">The dashed blue frame on the canvas previews the export padding. SVG exports true vector structure — every layer stays editable in Figma &amp; Inkscape.</div>
         </div></div>
       </div>
 
@@ -564,6 +567,25 @@
             <button class="btn" id="saveProjectBtn"><i class="fa-solid fa-floppy-disk"></i> Save</button>
             <button class="btn" id="loadProjectBtn"><i class="fa-solid fa-folder-open"></i> Load</button>
           </div>
+        </div></div>
+      </div>
+
+      <div class="panel-section collapsed" id="sec-presets">
+        <button type="button" class="panel-head"><span>Presets</span><span class="head-right"><span id="presetActiveName" style="color:var(--accent);font-size:9px;"></span><i class="fa-solid fa-chevron-down chev"></i></span></button>
+        <div class="panel-body"><div class="panel-inner">
+          <div class="input-row" style="margin-top:0;">
+            <label style="width:auto;"><i class="fa-solid fa-tag" style="font-size:11px;"></i></label>
+            <input type="text" class="num-input" id="presetName" placeholder="preset name…" value="My Preset">
+          </div>
+          <div class="btn-group">
+            <button class="btn" id="savePresetBtn"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+            <button class="btn" id="loadPresetBtn"><i class="fa-solid fa-folder-open"></i> Load</button>
+          </div>
+          <div class="btn-group">
+            <button class="btn" id="applyPresetBtn"><i class="fa-solid fa-wand-magic-sparkles"></i> Apply</button>
+            <button class="btn" id="clearPresetBtn" style="color:var(--danger);"><i class="fa-solid fa-xmark"></i> Clear</button>
+          </div>
+          <div class="panel-hint" style="padding:8px 0 0;">Saves <span class="kbd">all settings</span> to a .json file: export, document, tools, view + the full layer style (opacity, scale, rotation, blend, adjustments, shadow) taken from the <span class="kbd">selected layer</span>. After Load, every image you upload arrives with the style applied — visible on canvas. Active: <span class="kbd" id="presetActiveLabel">none</span></div>
         </div></div>
       </div>
     </aside>
@@ -577,6 +599,7 @@
         <div class="status-item" title="Ctrl/⌘+scroll zoom · Space+drag pan · F fit"><i class="fa-solid fa-magnifying-glass"></i> <span id="zoomVal">100%</span></div>
         <div class="status-item">Cursor: <span id="cursorPos" style="min-width:80px;">—</span></div>
         <div class="status-item">Layer: <span id="layerInfo">none</span></div>
+        <div class="status-item"><i class="fa-solid fa-wand-magic-sparkles"></i> Preset: <span id="presetInfo">none</span></div>
       </div>
       <div>All processing happens locally in your browser. No data is uploaded.</div>
     </div>
@@ -608,7 +631,7 @@ const state = {
   grid: { show: false, snap: false, size: 50 },
   rulers: true, guides: { v: [], h: [] }, guidesSnap: true, guideDrag: null,
   crop: null, cropDrag: null,
-  paintMask: false, maskBrush: 'hide',
+  paintMask: false, maskBrush: 'hide', lastPreset: null, presetLayerStyle: null,
   export: { format: 'png', scale: 1, transparent: true, bg: '#ffffff', quality: 90, bounds: 'content', padding: 0 }
 };
 
@@ -619,6 +642,7 @@ const gridOverlay = document.getElementById('gridOverlay');
 const emptyState = document.getElementById('emptyState');
 const fileInput = document.getElementById('fileInput');
 const projectInput = document.getElementById('projectInput');
+const presetInput = document.getElementById('presetInput');
 const layersList = document.getElementById('layersList');
 const layerCount = document.getElementById('layerCount');
 const transformPanel = document.getElementById('transformPanel');
@@ -713,6 +737,7 @@ function applyView() {
   document.getElementById('zoomVal').textContent = Math.round(state.view.S * 100) + '%';
   drawRulers();
   positionGuides();
+  syncExportPadPreview();
   if (state.crop) positionCropUI();
 }
 function setZoom(z) {
@@ -729,6 +754,18 @@ function clientToDoc(cx, cy) {
 }
 function docToScreenX(dx) { const r = canvasCard.getBoundingClientRect(); return r.width / 2 + (dx - state.doc.w / 2) * state.view.S + state.view.px; }
 function docToScreenY(dy) { const r = canvasCard.getBoundingClientRect(); return r.height / 2 + (dy - state.doc.h / 2) * state.view.S + state.view.py; }
+
+function syncExportPadPreview() {
+  const el = document.getElementById('exportPadPreview');
+  if (!el) return;
+  const pad = state.export.padding || 0;
+  if (pad <= 0) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  el.style.left = (-pad) + 'px';
+  el.style.top = (-pad) + 'px';
+  el.style.width = (state.doc.w + pad * 2) + 'px';
+  el.style.height = (state.doc.h + pad * 2) + 'px';
+}
 
 function layerBBox(l, padShadow) {
   const rad = l.rotation * Math.PI / 180;
@@ -886,7 +923,7 @@ function snapToGuides(l) {
   if (dh !== null) l.y += dh;
 }
 
-/* ---------------- Filters (incl. Hue) ---------------- */
+/* ---------------- Filters ---------------- */
 function cssFilter(a) {
   a = a || NEUTRAL;
   const parts = [];
@@ -1088,7 +1125,7 @@ function drawBrushLine(layer, from, to) {
   afterPaint(layer);
 }
 
-/* iOS "squircle" — rounded rectangle with the iOS app-icon radius (22.37%) */
+/* iOS "squircle" */
 function roundRectPath(ctx, x, y, w, h, r) {
   if (w < 0) { x += w; w = -w; }
   if (h < 0) { y += h; h = -h; }
@@ -1117,6 +1154,7 @@ function createTextLayer() {
   renderTextLayer(layer);
   layer.x = Math.round((state.doc.w - layer.w) / 2);
   layer.y = Math.round((state.doc.h - layer.h) / 2);
+  applyPresetStyleToLayer(layer);
   state.layers.push(layer);
   renderLayer(layer); selectLayer(layer.id); updateUI();
   openSection('sec-text', true);
@@ -1362,7 +1400,6 @@ async function stampIconLayer(x, y, w, h) {
   toast(`"${state.shapeIcon}" stamped — drag it to move`, 'fa-shapes');
 }
 
-/* Rect / iOS / Circle stamp as movable layers */
 function stampShapeLayer(x, y, w, h) {
   const W = Math.max(8, Math.round(w)), H = Math.max(8, Math.round(h));
   const c = document.createElement('canvas');
@@ -1382,7 +1419,6 @@ function stampShapeLayer(x, y, w, h) {
   toast(`${names[state.shapeType]} stamped — drag it to move`, 'fa-shapes');
 }
 
-/* Shared layer factory for stamped icons & shapes */
 function addStampLayer(c, name, x, y) {
   const dataUrl = c.toDataURL('image/png');
   const layer = {
@@ -1394,6 +1430,7 @@ function addStampLayer(c, name, x, y) {
     canvasEl: c, canvasCtx: c.getContext('2d'), baseCanvas: null, maskCanvas: null,
     shadow: { x: 0, y: 0, blur: 0, opacity: 0, color: '#000000' }
   };
+  applyPresetStyleToLayer(layer);
   const img = new Image();
   img.onload = () => { layer.imgEl = img; updateLayerList(); };
   img.src = dataUrl;
@@ -1432,11 +1469,7 @@ function addStampLayer(c, name, x, y) {
         iconList = pop.concat(rest);
         buildIconGrid();
         try {
-          localStorage.setItem('workshop_icon_cache', JSON.stringify({
-            names: iconList,
-            map: iconMap,
-            saved: Date.now()
-          }));
+          localStorage.setItem('workshop_icon_cache', JSON.stringify({ names: iconList, map: iconMap, saved: Date.now() }));
         } catch (e) {}
       }
     })
@@ -1672,7 +1705,7 @@ function resampleBitmaps(l) {
   if (had && l.canvasEl !== had) renderLayer(l);
 }
 
-/* ---------------- Add image ---------------- */
+/* ---------------- Add image — THE PRESET LANDS HERE ---------------- */
 function addImageLayer(src, name, targetSlot = null) {
   return new Promise((resolve) => {
     const img = new Image(); img.crossOrigin = 'anonymous';
@@ -1684,11 +1717,6 @@ function addImageLayer(src, name, targetSlot = null) {
         targetSlot.name = name || targetSlot.name;
         layer = targetSlot;
       } else {
-        if (!state.docLocked && (w > state.doc.w || h > state.doc.h)) {
-          setDocSize(Math.max(state.doc.w, w), Math.max(state.doc.h, h));
-          document.getElementById('docPreset').value = 'custom';
-          toast(`Document enlarged to ${state.doc.w} × ${state.doc.h} to show the full image`, 'fa-up-right-and-down-left-from-center');
-        }
         layer = {
           id: ++state.layerIdCounter, type: 'image', src,
           name: name || `Layer ${state.layerIdCounter}`,
@@ -1700,9 +1728,21 @@ function addImageLayer(src, name, targetSlot = null) {
           canvasEl: null, canvasCtx: null, baseCanvas: null, maskCanvas: null,
           shadow: { x: 0, y: 0, blur: 0, opacity: 0.0, color: '#000000' }
         };
+        // ★ THE PRESET'S LAYER STYLE IS APPLIED TO THE NEW IMAGE HERE
+        //   (opacity, scale, rotation, blend, adjustments, shadow)
+        const styled = applyPresetStyleToLayer(layer);
+        if (!state.docLocked) {
+          const effW = layer.w * layer.scale, effH = layer.h * layer.scale;
+          if (effW > state.doc.w || effH > state.doc.h) {
+            setDocSize(Math.max(state.doc.w, Math.ceil(effW)), Math.max(state.doc.h, Math.ceil(effH)));
+            document.getElementById('docPreset').value = 'custom';
+            toast(`Document enlarged to ${state.doc.w} × ${state.doc.h} to show the full image`, 'fa-up-right-and-down-left-from-center');
+          }
+        }
         state.layers.push(layer);
         fitView();
-        toast(`${w} × ${h} added — centered & fitted · export keeps ${w} × ${h}`, 'fa-image');
+        const pn = styled && state.lastPreset ? ` · preset "${state.lastPreset.name}" style applied` : '';
+        toast(`${w} × ${h} added — centered & fitted${pn}`, 'fa-image');
       }
       renderLayer(layer); selectLayer(layer.id); updateUI(); resolve(layer);
     };
@@ -2431,9 +2471,9 @@ document.getElementById('clearBtn').addEventListener('click', () => {
   toast('Canvas cleared', 'fa-trash-can');
 });
 
-/* ---------------- Reset all ---------------- */
+/* ---------------- Reset all (also clears the preset style) ---------------- */
 document.getElementById('resetAllBtn').addEventListener('click', () => {
-  if (!confirm('Reset everything?\n\n• All layers removed (recoverable with Undo)\n• Document back to 1000 × 700 (auto-grow re-enabled)\n• Guides, grid and view reset\n• Export & tool settings back to defaults')) return;
+  if (!confirm('Reset everything?\n\n• All layers removed (recoverable with Undo)\n• Document, guides, grid and view reset\n• Export & tool settings back to defaults\n• Active preset cleared')) return;
   saveHistory();
   state.crop = null; state.cropDrag = null; updateCropUI();
   state.iconDrag = null; const ip = document.getElementById('iconPreview'); ip.style.display = 'none'; ip.style.background = 'transparent';
@@ -2480,8 +2520,9 @@ document.getElementById('resetAllBtn').addEventListener('click', () => {
   document.getElementById('expPaddingVal').textContent = '0px';
   updateSliderFill('expPadding');
   updateExportUI();
+  state.lastPreset = null; state.presetLayerStyle = null; updatePresetUI();
   Object.keys(userCollapsed).forEach(k => delete userCollapsed[k]);
-  ['sec-paint', 'sec-transform', 'sec-text', 'sec-document', 'sec-view', 'sec-export', 'sec-project'].forEach(collapseSection);
+  ['sec-paint', 'sec-transform', 'sec-text', 'sec-document', 'sec-view', 'sec-export', 'sec-project', 'sec-presets'].forEach(collapseSection);
   document.getElementById('sec-layers').classList.remove('collapsed');
   updateUI(); setActiveTool('select');
   toast('Everything reset to defaults', 'fa-arrows-rotate');
@@ -2525,9 +2566,10 @@ document.getElementById('expPadding').addEventListener('input', e => {
   state.export.padding = parseInt(e.target.value);
   document.getElementById('expPaddingVal').textContent = state.export.padding + 'px';
   updateSliderFill('expPadding');
+  syncExportPadPreview();
 });
 
-/* ---------------- Export (PNG / JPEG / WebP / SVG, with padding) ---------------- */
+/* ---------------- Export (PNG / JPEG / WebP / SVG) ---------------- */
 document.getElementById('exportBtn').addEventListener('click', () => {
   const layers = state.layers.filter(l => hasContent(l) && l.opacity > 0.02).sort((a, b) => a.z - b.z);
   if (layers.length === 0) { toast('Nothing to export', 'fa-triangle-exclamation'); return; }
@@ -2560,7 +2602,6 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   const ew = cw + pad * 2, eh = ch + pad * 2;
   const offX = pad - cx0, offY = pad - cy0;
 
-  /* ---- SVG EXPORT: true vector structure with embedded layer images ---- */
   if (f === 'svg') {
     const r2 = n => Math.round(n * 100) / 100;
     let defs = '', body = '', fid = 0;
@@ -2602,7 +2643,6 @@ document.getElementById('exportBtn').addEventListener('click', () => {
     return;
   }
 
-  /* ---- Raster export (PNG / JPEG / WebP) ---- */
   const out = document.createElement('canvas');
   out.width = Math.max(1, Math.round(ew * k));
   out.height = Math.max(1, Math.round(eh * k));
@@ -2622,7 +2662,7 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   toast(`Exported ${out.width} × ${out.height} ${ext.toUpperCase()}${pad ? ` (+${pad}px padding)` : ''}`, 'fa-download');
 });
 
-/* ---------------- Save / Load ---------------- */
+/* ---------------- Save / Load project ---------------- */
 document.getElementById('saveProjectBtn').addEventListener('click', () => {
   if (state.layers.length === 0) { toast('Nothing to save', 'fa-triangle-exclamation'); return; }
   const data = {
@@ -2668,6 +2708,169 @@ function loadProjectFromFile(file) {
   };
   r.readAsText(file);
 }
+
+/* ============================================================
+   PRESETS — Save / Load EVERYTHING to a .json file:
+   app settings (export, document, tools, view) AND the full
+   layer style (opacity, scale, rotation, blend, adjustments,
+   shadow) captured from the SELECTED layer. After Load, every
+   newly uploaded image is created WITH that style — so you SEE
+   the preset on the canvas. File-based only, no startup magic.
+   ============================================================ */
+function applyPresetStyleToLayer(layer) {
+  const st = state.presetLayerStyle;
+  if (!st) return false;
+  layer.opacity = (typeof st.opacity === 'number') ? st.opacity : 1;
+  layer.scale = (typeof st.scale === 'number') ? st.scale : 1;
+  layer.rotation = (typeof st.rotation === 'number') ? st.rotation : 0;
+  layer.blend = st.blend || 'normal';
+  layer.adjust = { ...NEUTRAL, ...(st.adjust || {}) };
+  layer.shadow = { x: 0, y: 0, blur: 0, opacity: 0, color: '#000000', ...(st.shadow || {}) };
+  return true;
+}
+function updatePresetUI() {
+  const n = state.lastPreset ? (state.lastPreset.name || '') : '';
+  document.getElementById('presetActiveName').textContent = n;
+  document.getElementById('presetActiveLabel').textContent = n || 'none';
+  document.getElementById('presetInfo').textContent = n || 'none';
+}
+function capturePreset() {
+  // Layer style is taken from the SELECTED layer (the one you adjusted
+  // in the right-hand panel). Falls back to the active style if none.
+  const sl = sel();
+  let layerStyle = null;
+  if (sl && hasContent(sl)) {
+    layerStyle = {
+      opacity: sl.opacity, scale: sl.scale, rotation: sl.rotation,
+      blend: sl.blend || 'normal',
+      adjust: { ...NEUTRAL, ...(sl.adjust || {}) },
+      shadow: { ...sl.shadow }
+    };
+  } else if (state.presetLayerStyle) {
+    layerStyle = {
+      ...state.presetLayerStyle,
+      adjust: { ...NEUTRAL, ...(state.presetLayerStyle.adjust || {}) },
+      shadow: { ...state.presetLayerStyle.shadow }
+    };
+  }
+  return {
+    app: 'workshop-preset', version: 3,
+    name: (document.getElementById('presetName').value || 'My Preset').trim(),
+    export: { ...state.export, name: document.getElementById('expName').value },
+    doc: { w: state.doc.w, h: state.doc.h, docLocked: state.docLocked },
+    tools: {
+      toolSize: state.toolSize, brushColor: state.brushColor, brushShape: state.brushShape,
+      shapeColor: state.shapeColor, shapeType: state.shapeType,
+      gradColor1: state.gradColor1, gradColor2: state.gradColor2, gradType: state.gradType,
+      lockAspect: state.lockAspect
+    },
+    view: { rulers: state.rulers, guidesSnap: state.guidesSnap, grid: { ...state.grid } },
+    layerStyle: layerStyle
+  };
+}
+function applyPreset(p) {
+  if (!p || p.app !== 'workshop-preset') { toast('Invalid preset file', 'fa-triangle-exclamation'); return; }
+  if (p.export) {
+    state.export = { ...state.export, ...p.export };
+    if (typeof p.export.name === 'string' && p.export.name) document.getElementById('expName').value = p.export.name;
+    document.getElementById('expBg').value = state.export.bg;
+    document.getElementById('expQuality').value = state.export.quality;
+    document.getElementById('expQualityVal').textContent = state.export.quality + '%';
+    document.getElementById('expPadding').value = state.export.padding;
+    document.getElementById('expPaddingVal').textContent = state.export.padding + 'px';
+    document.getElementById('expTransparent').checked = state.export.transparent;
+    updateExportUI();
+    updateSliderFill('expQuality'); updateSliderFill('expPadding');
+  }
+  if (p.doc) {
+    setDocSize(p.doc.w, p.doc.h);
+    state.docLocked = !!p.doc.docLocked;
+    document.getElementById('docPreset').value = 'custom';
+  }
+  if (p.tools) {
+    const t = p.tools;
+    state.toolSize = t.toolSize || 40;
+    document.getElementById('sizeSlider').value = state.toolSize;
+    document.getElementById('sizeVal').textContent = state.toolSize + 'px';
+    updateSliderFill('sizeSlider');
+    state.brushColor = t.brushColor || '#e9b872';
+    document.getElementById('brushColor').value = state.brushColor;
+    state.brushShape = t.brushShape || 'round';
+    document.getElementById('brushRound').classList.toggle('active', state.brushShape === 'round');
+    document.getElementById('brushSquare').classList.toggle('active', state.brushShape === 'square');
+    state.shapeColor = t.shapeColor || '#ff7849';
+    document.getElementById('shapeColor').value = state.shapeColor;
+    state.shapeType = t.shapeType || 'rect';
+    document.getElementById('shapeRect').classList.toggle('active', state.shapeType === 'rect');
+    document.getElementById('shapeIos').classList.toggle('active', state.shapeType === 'ios');
+    document.getElementById('shapeCircle').classList.toggle('active', state.shapeType === 'circle');
+    document.getElementById('shapeIcon').classList.toggle('active', state.shapeType === 'icon');
+    state.gradColor1 = t.gradColor1 || '#e9b872';
+    state.gradColor2 = t.gradColor2 || '#ff7849';
+    state.gradType = t.gradType || 'linear';
+    document.getElementById('gradColor1').value = state.gradColor1;
+    document.getElementById('gradColor2').value = state.gradColor2;
+    document.getElementById('gradLinear').classList.toggle('active', state.gradType === 'linear');
+    document.getElementById('gradRadial').classList.toggle('active', state.gradType === 'radial');
+    state.lockAspect = t.lockAspect !== false;
+    document.getElementById('lockAspect').checked = state.lockAspect;
+  }
+  if (p.view) {
+    state.rulers = p.view.rulers !== false;
+    document.getElementById('showRulers').checked = state.rulers;
+    state.guidesSnap = p.view.guidesSnap !== false;
+    document.getElementById('snapGuides').checked = state.guidesSnap;
+    if (p.view.grid) {
+      state.grid = { ...state.grid, ...p.view.grid };
+      document.getElementById('showGrid').checked = state.grid.show;
+      document.getElementById('snapGrid').checked = state.grid.snap;
+      document.getElementById('gridSize').value = state.grid.size;
+      updateGrid();
+    }
+    drawRulers();
+  }
+  state.presetLayerStyle = (p.layerStyle && typeof p.layerStyle === 'object') ? p.layerStyle : null;
+  if (p.name) document.getElementById('presetName').value = p.name;
+  state.lastPreset = p;
+  updatePresetUI();
+  syncExportPadPreview();
+  const st = state.presetLayerStyle ? ' — new images will arrive with its style' : '';
+  toast(`Preset "${p.name}" applied${st}`, 'fa-wand-magic-sparkles');
+}
+document.getElementById('savePresetBtn').addEventListener('click', () => {
+  const p = capturePreset();
+  const blob = new Blob([JSON.stringify(p)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.download = (p.name.replace(/[\\/:*?"<>|]/g, '') || 'preset') + '.json';
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  state.lastPreset = p;
+  state.presetLayerStyle = p.layerStyle;
+  updatePresetUI();
+  toast(`Preset "${p.name}" saved to file — active now`, 'fa-floppy-disk');
+});
+document.getElementById('loadPresetBtn').addEventListener('click', () => presetInput.click());
+presetInput.addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try { applyPreset(JSON.parse(r.result)); }
+    catch (err) { toast('Invalid preset file', 'fa-triangle-exclamation'); }
+  };
+  r.readAsText(f);
+  e.target.value = '';
+});
+document.getElementById('applyPresetBtn').addEventListener('click', () => {
+  if (state.lastPreset) applyPreset(state.lastPreset);
+  else toast('No preset loaded yet — Load one first', 'fa-circle-info');
+});
+document.getElementById('clearPresetBtn').addEventListener('click', () => {
+  state.lastPreset = null; state.presetLayerStyle = null;
+  updatePresetUI();
+  toast('Preset cleared — new images use default style', 'fa-xmark');
+});
 
 /* ---------------- Keyboard ---------------- */
 document.addEventListener('keydown', e => {
@@ -2722,7 +2925,7 @@ document.addEventListener('keyup', e => {
   if (e.code === 'Space') { state.spaceDown = false; canvasCard.classList.remove('pan-ready'); }
 });
 
-/* ---------------- Init ---------------- */
+/* ---------------- Init (NO preset auto-load — Load manually) ---------------- */
 window.addEventListener('resize', applyView);
 document.querySelectorAll('input[type=range]').forEach(s => updateSliderFill(s.id));
 setActiveTool('select');

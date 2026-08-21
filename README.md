@@ -31,6 +31,10 @@
         5       Adds SVG as a fourth export format in the UI and wires it into export state handling. 
         6       The export flow now generates SVG output with preserved layer transforms, opacity, blend modes, drop shadows, optional background fill, and embedded layer images (including adjustment filters baked per layer when needed). 
         7       The export UI was also updated so quality controls are hidden for SVG, and helper copy/comments were refined to reflect the new behavior.
+        8       Adds a Presets panel (Save/Load/Apply/Clear) that captures all app settings (export, document, tools, view) plus the selected layer's full style (opacity, scale, rotation, blend, adjustments, shadow) to a .json file.
+        9       Newly uploaded images automatically receive the active preset's layer style.
+       10       Adds a dashed blue canvas overlay (#exportPadPreview) to visualise export padding in real time.
+       11       Preset status shown in the status bar; Reset All also clears the active preset.
  
 ---------------------------------
 
