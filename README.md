@@ -4,9 +4,10 @@
 ## Start using ➢ [Workshop Layered Image Studio](https://chris1111.github.io/Workshop-Layered-Image-Studio/)
 
 ### The Workshop is a lightweight, privacy-first, browser-based image compositing tool designed for stacking and manipulating transparent images (like PNGs) with pixel-perfect precision.
-- 🚫 This is not work in IOS Device.
   
          A Mini Photopshop free 🫶🏻
+
+- 🚫 This is not work in IOS Device.	 
 
 ## Its core purposes are:
 
