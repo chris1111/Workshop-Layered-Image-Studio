@@ -1413,22 +1413,23 @@ function syncIconMode() {
   canvasCard.classList.toggle('icon-mode', state.activeTool === 'shape');
 }
 
-let activePointerCapture = null;
+const activePointerCaptures = new Map();
 function capturePointer(e) {
   if (e.pointerId == null || !e.currentTarget || !e.currentTarget.setPointerCapture) return;
   try {
     e.currentTarget.setPointerCapture(e.pointerId);
-    activePointerCapture = { id: e.pointerId, target: e.currentTarget };
+    activePointerCaptures.set(e.pointerId, e.currentTarget);
   } catch (err) {}
 }
 function releasePointerCapture(e) {
-  const capture = activePointerCapture;
-  if (!capture || !capture.target || !capture.target.releasePointerCapture) return;
-  if (e && e.pointerId != null && capture.id !== e.pointerId) return;
-  try {
-    capture.target.releasePointerCapture(capture.id);
-  } catch (err) {}
-  activePointerCapture = null;
+  const releaseOne = (pointerId) => {
+    const target = activePointerCaptures.get(pointerId);
+    if (!target || !target.releasePointerCapture) return;
+    try { target.releasePointerCapture(pointerId); } catch (err) {}
+    activePointerCaptures.delete(pointerId);
+  };
+  if (e && e.pointerId != null) releaseOne(e.pointerId);
+  else Array.from(activePointerCaptures.keys()).forEach(releaseOne);
 }
 
 function startIconDrag(e) {
@@ -3038,96 +3039,6 @@ if (mobilePanelBtn && rightPanel) {
     rightPanel.classList.remove('open');
     mobilePanelOverlay.classList.remove('active');
     mobilePanelBtn.innerHTML = '<i class="fa-solid fa-sliders"></i>';
-  });
-}
-
-// --- Unified pointer/touch event helper ---
-// This makes ALL existing mousedown/mousemove/mouseup work on iOS
-function addTouchSupport() {
-  // Convert touch events to mouse-compatible events for existing handlers
-  const canvasCard = document.getElementById('canvasCard');
-  
-  if (!canvasCard) return;
-  
-  // Touch start → dispatch as mousedown
-  canvasCard.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) {
-      const touch = e.touches[0];
-      const mouseEvent = new MouseEvent('mousedown', {
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-        bubbles: true,
-        cancelable: true
-      });
-      canvasCard.dispatchEvent(mouseEvent);
-      e.preventDefault();
-    }
-  }, { passive: false });
-  
-  // Touch move → dispatch as mousemove
-  canvasCard.addEventListener('touchmove', (e) => {
-    if (e.touches.length === 1) {
-      const touch = e.touches[0];
-      const mouseEvent = new MouseEvent('mousemove', {
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-        bubbles: true,
-        cancelable: true
-      });
-      document.dispatchEvent(mouseEvent);
-      e.preventDefault();
-    }
-  }, { passive: false });
-  
-  // Touch end → dispatch as mouseup
-  canvasCard.addEventListener('touchend', (e) => {
-    const mouseEvent = new MouseEvent('mouseup', {
-      bubbles: true,
-      cancelable: true
-    });
-    document.dispatchEvent(mouseEvent);
-  });
-}
-
-// --- Layer touch support (drag, resize, rotate) ---
-function addLayerTouchSupport() {
-  document.addEventListener('touchstart', (e) => {
-    const layerEl = e.target.closest('[data-layer-id]');
-    if (layerEl && e.touches.length === 1) {
-      const touch = e.touches[0];
-      const mouseEvent = new MouseEvent('mousedown', {
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-        bubbles: true,
-        cancelable: true
-      });
-      layerEl.dispatchEvent(mouseEvent);
-      e.preventDefault();
-    }
-  }, { passive: false });
-  
-  document.addEventListener('touchmove', (e) => {
-    if (e.touches.length === 1 && state.isDragging) {
-      const touch = e.touches[0];
-      const mouseEvent = new MouseEvent('mousemove', {
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-        bubbles: true,
-        cancelable: true
-      });
-      document.dispatchEvent(mouseEvent);
-      e.preventDefault();
-    }
-  }, { passive: false });
-  
-  document.addEventListener('touchend', (e) => {
-    if (state.isDragging || state.isResizing || state.isRotating) {
-      const mouseEvent = new MouseEvent('mouseup', {
-        bubbles: true,
-        cancelable: true
-      });
-      document.dispatchEvent(mouseEvent);
-    }
   });
 }
 
