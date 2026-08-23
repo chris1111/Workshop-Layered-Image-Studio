@@ -930,8 +930,10 @@ function renderGuides() {
     el.className = axis === 'v' ? 'guide-v' : 'guide-h';
     el.dataset.coord = coord;
     el.title = 'Drag to move · double-click to remove';
-    el.addEventListener('mousedown', (e) => {
+    el.addEventListener('pointerdown', (e) => {
+      if (!e.isPrimary) return;
       e.preventDefault(); e.stopPropagation();
+      capturePointer(e);
       const idx = state.guides[axis].indexOf(coord);
       if (idx > -1) state.guides[axis].splice(idx, 1);
       state.guideDrag = { axis, coord, el };
@@ -953,7 +955,9 @@ function positionGuides() {
   document.querySelectorAll('#guidesLayer .guide-h').forEach(el => { el.style.top = docToScreenY(parseFloat(el.dataset.coord)) + 'px'; });
 }
 function rulerStart(axis, e) {
+  if (!e.isPrimary) return;
   e.preventDefault(); e.stopPropagation();
+  capturePointer(e);
   const el = document.createElement('div');
   el.className = axis === 'v' ? 'guide-v' : 'guide-h';
   document.getElementById('guidesLayer').appendChild(el);
@@ -962,8 +966,8 @@ function rulerStart(axis, e) {
   if (axis === 'v') el.style.left = docToScreenX(coord) + 'px'; else el.style.top = docToScreenY(coord) + 'px';
   state.guideDrag = { axis, coord, el };
 }
-document.getElementById('rulerTop').addEventListener('mousedown', e => rulerStart('h', e));
-document.getElementById('rulerLeft').addEventListener('mousedown', e => rulerStart('v', e));
+document.getElementById('rulerTop').addEventListener('pointerdown', e => rulerStart('h', e));
+document.getElementById('rulerLeft').addEventListener('pointerdown', e => rulerStart('v', e));
 
 function snapDelta(vals, guides, th) {
   let best = null;
@@ -1409,7 +1413,26 @@ function syncIconMode() {
   canvasCard.classList.toggle('icon-mode', state.activeTool === 'shape');
 }
 
+let activePointerCapture = null;
+function capturePointer(e) {
+  if (e.pointerId == null || !e.currentTarget || !e.currentTarget.setPointerCapture) return;
+  try {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    activePointerCapture = { id: e.pointerId, target: e.currentTarget };
+  } catch (err) {}
+}
+function releasePointerCapture(e) {
+  const capture = activePointerCapture;
+  if (!capture || !capture.target || !capture.target.releasePointerCapture) return;
+  if (e && e.pointerId != null && capture.id !== e.pointerId) return;
+  try {
+    capture.target.releasePointerCapture(capture.id);
+  } catch (err) {}
+  activePointerCapture = null;
+}
+
 function startIconDrag(e) {
+  capturePointer(e);
   const p = clientToDoc(e.clientX, e.clientY);
   state.iconDrag = { x0: p.x, y0: p.y, x1: p.x, y1: p.y };
   updateIconPreview();
@@ -1536,6 +1559,7 @@ buildIconGrid();
 
 /* ---------------- Crop ---------------- */
 function startCropDrag(e) {
+  capturePointer(e);
   e.preventDefault();
   const r = canvasCard.getBoundingClientRect();
   state.cropDrag = { x0: e.clientX - r.left, y0: e.clientY - r.top, x1: e.clientX - r.left, y1: e.clientY - r.top };
@@ -1606,7 +1630,7 @@ function cancelCrop() {
 }
 document.getElementById('cropApplyBtn').addEventListener('click', applyCrop);
 document.getElementById('cropCancelBtn').addEventListener('click', cancelCrop);
-document.getElementById('cropBar').addEventListener('mousedown', e => e.stopPropagation());
+document.getElementById('cropBar').addEventListener('pointerdown', e => e.stopPropagation());
 
 /* ---------------- Cursor & mouse ---------------- */
 function updateCursorPos(e) {
@@ -1616,7 +1640,7 @@ function updateCursorPos(e) {
   document.getElementById('cursorPos').textContent = `${Math.round(p.x)}, ${Math.round(p.y)}`;
 }
 
-document.addEventListener('mousemove', (e) => {
+document.addEventListener('pointermove', (e) => {
   updateCursorPos(e);
 
   if (state.isPanning) {
@@ -1690,7 +1714,7 @@ document.addEventListener('mousemove', (e) => {
   }
 });
 
-document.addEventListener('mouseup', (e) => {
+function finishPointerInteraction(e) {
   if (state.isErasing) state.isErasing = false;
   if (state.isDrawing) state.isDrawing = false;
   if (state.isPanning) { state.isPanning = false; canvasCard.classList.remove('panning'); }
@@ -1745,7 +1769,10 @@ document.addEventListener('mouseup', (e) => {
       if (growDocToContainLayer(l)) fitView();
     }
   }
-});
+  releasePointerCapture(e);
+}
+document.addEventListener('pointerup', finishPointerInteraction);
+document.addEventListener('pointercancel', finishPointerInteraction);
 
 function resampleBitmaps(l) {
   const W = Math.max(1, Math.round(l.w)), H = Math.max(1, Math.round(l.h));
@@ -1841,14 +1868,16 @@ function updateLayerTransform(layer) {
 }
 
 function attachLayerEvents(el, layer) {
-  el.addEventListener('mousedown', (e) => {
+  el.addEventListener('pointerdown', (e) => {
+    if (!e.isPrimary) return;
     if (state.spaceDown || e.button === 1) return;
     if (state.activeTool === 'crop') { e.stopPropagation(); startCropDrag(e); return; }
     if (state.activeTool === 'shape') { e.stopPropagation(); startIconDrag(e); return; }
     e.stopPropagation(); selectLayer(layer.id);
     if (!hasContent(layer)) return;
-    if (state.activeTool === 'eraser') { saveHistory(); state.isErasing = true; eraseAtPos(e.clientX, e.clientY); return; }
+    if (state.activeTool === 'eraser') { capturePointer(e); saveHistory(); state.isErasing = true; eraseAtPos(e.clientX, e.clientY); return; }
     if (state.activeTool === 'brush') {
+      capturePointer(e);
       saveHistory(); state.isDrawing = true;
       const coords = getLocalCoords(layer, e.clientX, e.clientY);
       state.lastBrushPoint = coords; drawBrushDot(layer, coords.x, coords.y); return;
@@ -1870,6 +1899,7 @@ function attachLayerEvents(el, layer) {
 
 function startDrag(e, layer) {
   if (!hasContent(layer)) return;
+  capturePointer(e);
   state.isDragging = true; state.dragMoved = false;
   state.dragStart = { x: e.clientX, y: e.clientY, lx: layer.x, ly: layer.y };
   const el = document.querySelector(`[data-layer-id="${layer.id}"]`);
@@ -1877,11 +1907,13 @@ function startDrag(e, layer) {
 }
 
 function startResize(e, layer, handle) {
+  capturePointer(e);
   saveHistory(); state.isResizing = true; state.resizeHandle = handle;
   state.resizeStart = { x: e.clientX, y: e.clientY, w: layer.w, h: layer.h, lx: layer.x, ly: layer.y, aspect: layer.w / layer.h };
 }
 
 function startRotate(e, layer) {
+  capturePointer(e);
   saveHistory(); state.isRotating = true;
   const el = document.querySelector(`[data-layer-id="${layer.id}"]`);
   const rect = el.getBoundingClientRect();
@@ -1889,12 +1921,14 @@ function startRotate(e, layer) {
 }
 
 function startPan(e) {
+  capturePointer(e);
   state.isPanning = true;
   state.panStart = { x: e.clientX, y: e.clientY, px: state.view.px, py: state.view.py };
   canvasCard.classList.add('panning');
 }
 
-canvasCard.addEventListener('mousedown', (e) => {
+canvasCard.addEventListener('pointerdown', (e) => {
+  if (!e.isPrimary) return;
   if (state.spaceDown || e.button === 1) { e.preventDefault(); startPan(e); return; }
   if (state.activeTool === 'crop') { e.preventDefault(); startCropDrag(e); return; }
   if (state.activeTool === 'shape') { e.preventDefault(); startIconDrag(e); return; }
@@ -2995,11 +3029,9 @@ const rightPanel = document.querySelector('.right-panel');
 if (mobilePanelBtn && rightPanel) {
   mobilePanelBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    rightPanel.classList.toggle('open');
-    mobilePanelOverlay.classList.toggle('active');
-    mobilePanelBtn.innerHTML = rightPanel.classList.contains('open') 
-      ? '<i class="fa-solid fa-xmark"></i>' 
-      : '<i class="fa-solid fa-sliders"></i>';
+    rightPanel.classList.add('open');
+    mobilePanelOverlay.classList.add('active');
+    mobilePanelBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
   });
   
   mobilePanelOverlay.addEventListener('click', () => {
@@ -3206,8 +3238,6 @@ function preventIOSScrollBounce() {
 }
 
 // --- Initialize all iOS support ---
-addTouchSupport();
-addLayerTouchSupport();
 addPinchZoomSupport();
 addDoubleTapSupport();
 enhanceFileInputForIOS();
