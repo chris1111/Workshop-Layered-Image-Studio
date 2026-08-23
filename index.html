@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Workshop — Layered Image Studio</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -178,10 +178,67 @@
   @keyframes toastOut { to { transform: translateX(120%); opacity: 0; } }
   .canvas-card.drag-over::after { content: 'Drop images to add as layers'; position: absolute; inset: 8px; background: rgba(233, 184, 114, 0.1); border: 2px dashed var(--accent); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--accent); font-family: 'Fraunces', serif; font-size: 22px; z-index: 100; pointer-events: none; padding: 20px; text-align: center; }
   @media (max-width: 1024px) { .main-grid { grid-template-columns: 64px 1fr 280px; } }
-  @media (max-width: 768px) { .main-grid { grid-template-columns: 56px 1fr; } .right-panel { display: none; } .footer-bar { flex-direction: column; gap: 8px; align-items: flex-start; } .footer-copy { text-align: left; } .header { gap: 8px; } .btn { padding: 8px 12px; font-size: 12px; } }
+  /* iOS height fix — use dynamic viewport height */
+html, body { height: 100dvh; height: 100vh; /* fallback */ }
+
+/* Safe area support for notched iPhones */
+.app-grid {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Prevent iOS default touch behaviors on canvas */
+.canvas-card { touch-action: none; -webkit-touch-callout: none; }
+.layer { touch-action: none; }
+
+/* Mobile panel toggle button */
+.mobile-panel-btn {
+  display: none; position: fixed; bottom: 20px; right: 20px; z-index: 999;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #1a1410; border: none; font-size: 22px;
+  box-shadow: 0 4px 20px var(--accent-glow);
+  align-items: center; justify-content: center; cursor: pointer;
+}
+
+/* Mobile panel overlay */
+.mobile-panel-overlay {
+  display: none; position: fixed; inset: 0; z-index: 998;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+}
+
+@media (max-width: 768px) {
+  .main-grid { grid-template-columns: 56px 1fr; }
+  .right-panel {
+    display: flex !important;
+    position: fixed; right: 0; top: 0; bottom: 0;
+    width: 320px; max-width: 85vw;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 999;
+    background: rgba(20, 16, 12, 0.98) !important;
+    box-shadow: -10px 0 40px rgba(0,0,0,0.5);
+  }
+  .right-panel.open { transform: translateX(0); }
+  .mobile-panel-btn { display: flex; }
+  .mobile-panel-overlay.active { display: block; }
+  .footer-bar { flex-direction: column; gap: 8px; align-items: flex-start; }
+  .footer-copy { text-align: left; }
+  .header { gap: 8px; }
+  .btn { padding: 8px 12px; font-size: 12px; }
+  .header { flex-wrap: wrap; }
+  .header-left { flex-wrap: wrap; gap: 8px; }
+}
 </style>
 </head>
 <body>
+<!-- iOS Mobile Panel Support -->
+<button class="mobile-panel-btn" id="mobilePanelBtn" title="Show Tools">
+  <i class="fa-solid fa-sliders"></i>
+</button>
+<div class="mobile-panel-overlay" id="mobilePanelOverlay"></div>
 <input type="file" id="projectInput" class="file-input" accept=".json,application/json">
 <input type="file" id="presetInput" class="file-input" accept=".json,application/json">
 
@@ -208,7 +265,7 @@
 
   <div class="main-grid">
     <div class="tool-rail">
-      <input type="file" id="fileInput" class="file-input" multiple accept="image/*">
+      <input type="file" id="fileInput" class="file-input" multiple accept="image/*" capture="environment" style="display:none; -webkit-user-select:none;">
       <button class="tool-btn active" id="selectTool" title="Select & Move (V)"><i class="fa-solid fa-arrow-pointer"></i></button>
       <button class="tool-btn" id="eraserTool" title="Eraser (E)"><i class="fa-solid fa-eraser"></i></button>
       <button class="tool-btn" id="brushTool" title="Brush (B)"><i class="fa-solid fa-paintbrush"></i></button>
@@ -2928,6 +2985,233 @@ updateGrid();
 updateExportUI();
 requestAnimationFrame(applyView);
 toast('Welcome to the Workshop! Start your Composition', 'fa-hand-sparkles');
+/* ============ iOS MOBILE SUPPORT ============ */
+
+// --- Mobile panel toggle ---
+const mobilePanelBtn = document.getElementById('mobilePanelBtn');
+const mobilePanelOverlay = document.getElementById('mobilePanelOverlay');
+const rightPanel = document.querySelector('.right-panel');
+
+if (mobilePanelBtn && rightPanel) {
+  mobilePanelBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    rightPanel.classList.toggle('open');
+    mobilePanelOverlay.classList.toggle('active');
+    mobilePanelBtn.innerHTML = rightPanel.classList.contains('open') 
+      ? '<i class="fa-solid fa-xmark"></i>' 
+      : '<i class="fa-solid fa-sliders"></i>';
+  });
+  
+  mobilePanelOverlay.addEventListener('click', () => {
+    rightPanel.classList.remove('open');
+    mobilePanelOverlay.classList.remove('active');
+    mobilePanelBtn.innerHTML = '<i class="fa-solid fa-sliders"></i>';
+  });
+}
+
+// --- Unified pointer/touch event helper ---
+// This makes ALL existing mousedown/mousemove/mouseup work on iOS
+function addTouchSupport() {
+  // Convert touch events to mouse-compatible events for existing handlers
+  const canvasCard = document.getElementById('canvasCard');
+  
+  if (!canvasCard) return;
+  
+  // Touch start → dispatch as mousedown
+  canvasCard.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      const mouseEvent = new MouseEvent('mousedown', {
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        bubbles: true,
+        cancelable: true
+      });
+      canvasCard.dispatchEvent(mouseEvent);
+      e.preventDefault();
+    }
+  }, { passive: false });
+  
+  // Touch move → dispatch as mousemove
+  canvasCard.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      const mouseEvent = new MouseEvent('mousemove', {
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        bubbles: true,
+        cancelable: true
+      });
+      document.dispatchEvent(mouseEvent);
+      e.preventDefault();
+    }
+  }, { passive: false });
+  
+  // Touch end → dispatch as mouseup
+  canvasCard.addEventListener('touchend', (e) => {
+    const mouseEvent = new MouseEvent('mouseup', {
+      bubbles: true,
+      cancelable: true
+    });
+    document.dispatchEvent(mouseEvent);
+  });
+}
+
+// --- Layer touch support (drag, resize, rotate) ---
+function addLayerTouchSupport() {
+  document.addEventListener('touchstart', (e) => {
+    const layerEl = e.target.closest('[data-layer-id]');
+    if (layerEl && e.touches.length === 1) {
+      const touch = e.touches[0];
+      const mouseEvent = new MouseEvent('mousedown', {
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        bubbles: true,
+        cancelable: true
+      });
+      layerEl.dispatchEvent(mouseEvent);
+      e.preventDefault();
+    }
+  }, { passive: false });
+  
+  document.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 1 && state.isDragging) {
+      const touch = e.touches[0];
+      const mouseEvent = new MouseEvent('mousemove', {
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        bubbles: true,
+        cancelable: true
+      });
+      document.dispatchEvent(mouseEvent);
+      e.preventDefault();
+    }
+  }, { passive: false });
+  
+  document.addEventListener('touchend', (e) => {
+    if (state.isDragging || state.isResizing || state.isRotating) {
+      const mouseEvent = new MouseEvent('mouseup', {
+        bubbles: true,
+        cancelable: true
+      });
+      document.dispatchEvent(mouseEvent);
+    }
+  });
+}
+
+// --- Pinch-to-zoom support ---
+function addPinchZoomSupport() {
+  const canvasCard = document.getElementById('canvasCard');
+  if (!canvasCard) return;
+  
+  let pinchStart = null;
+  let pinchStartZoom = 1;
+  
+  canvasCard.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const dist = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      pinchStart = { dist };
+      pinchStartZoom = state.view.z;
+    }
+  }, { passive: false });
+  
+  canvasCard.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2 && pinchStart) {
+      e.preventDefault();
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const dist = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      const scale = dist / pinchStart.dist;
+      const newZoom = pinchStartZoom * scale;
+      setZoom(newZoom);
+    }
+  }, { passive: false });
+  
+  canvasCard.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) {
+      pinchStart = null;
+    }
+  });
+}
+
+// --- Double-tap detection for text editing ---
+function addDoubleTapSupport() {
+  let lastTap = 0;
+  let lastTapTarget = null;
+  
+  document.addEventListener('touchend', (e) => {
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTap;
+    
+    if (tapLength < 300 && tapLength > 0 && lastTapTarget === e.target) {
+      // Double tap detected
+      const layerEl = e.target.closest('[data-layer-id]');
+      if (layerEl) {
+        const layerId = parseInt(layerEl.dataset.layerId);
+        const layer = state.layers.find(l => l.id === layerId);
+        if (layer && layer.type === 'text') {
+          e.preventDefault();
+          // Trigger the same logic as dblclick
+          selectLayer(layerId);
+          openSection('sec-text', true);
+          setTimeout(() => {
+            const ta = document.getElementById('txtContent');
+            if (ta) { ta.focus(); ta.select(); }
+          }, 150);
+        }
+      }
+    }
+    lastTap = currentTime;
+    lastTapTarget = e.target;
+  });
+}
+
+// --- iOS file input enhancement ---
+function enhanceFileInputForIOS() {
+  const fileInput = document.getElementById('fileInput');
+  if (fileInput) {
+    // Ensure proper iOS file selection
+    fileInput.setAttribute('accept', 'image/*');
+    
+    // iOS sometimes needs a direct click without event delegation
+    const addToolBtn = document.getElementById('addTool');
+    if (addToolBtn) {
+      addToolBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        fileInput.click();
+      });
+    }
+  }
+}
+
+// --- Prevent iOS rubber-band scrolling ---
+function preventIOSScrollBounce() {
+  document.addEventListener('touchmove', (e) => {
+    // Allow scrolling only within scrollable containers
+    const scrollable = e.target.closest('.layers-list, .right-panel, .icon-grid, .panel-inner');
+    if (!scrollable) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+}
+
+// --- Initialize all iOS support ---
+addTouchSupport();
+addLayerTouchSupport();
+addPinchZoomSupport();
+addDoubleTapSupport();
+enhanceFileInputForIOS();
+preventIOSScrollBounce();
 </script>
 </body>
 </html>
