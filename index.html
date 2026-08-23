@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Workshop — Layered Image Studio</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -178,67 +178,10 @@
   @keyframes toastOut { to { transform: translateX(120%); opacity: 0; } }
   .canvas-card.drag-over::after { content: 'Drop images to add as layers'; position: absolute; inset: 8px; background: rgba(233, 184, 114, 0.1); border: 2px dashed var(--accent); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--accent); font-family: 'Fraunces', serif; font-size: 22px; z-index: 100; pointer-events: none; padding: 20px; text-align: center; }
   @media (max-width: 1024px) { .main-grid { grid-template-columns: 64px 1fr 280px; } }
-  /* iOS height fix — use dynamic viewport height */
-html, body { height: 100dvh; height: 100vh; /* fallback */ }
-
-/* Safe area support for notched iPhones */
-.app-grid {
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  padding-left: env(safe-area-inset-left, 0px);
-  padding-right: env(safe-area-inset-right, 0px);
-}
-
-/* Prevent iOS default touch behaviors on canvas */
-.canvas-card { touch-action: none; -webkit-touch-callout: none; }
-.layer { touch-action: none; }
-
-/* Mobile panel toggle button */
-.mobile-panel-btn {
-  display: none; position: fixed; bottom: 20px; right: 20px; z-index: 999;
-  width: 56px; height: 56px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: #1a1410; border: none; font-size: 22px;
-  box-shadow: 0 4px 20px var(--accent-glow);
-  align-items: center; justify-content: center; cursor: pointer;
-}
-
-/* Mobile panel overlay */
-.mobile-panel-overlay {
-  display: none; position: fixed; inset: 0; z-index: 998;
-  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-}
-
-@media (max-width: 768px) {
-  .main-grid { grid-template-columns: 56px 1fr; }
-  .right-panel {
-    display: flex !important;
-    position: fixed; right: 0; top: 0; bottom: 0;
-    width: 320px; max-width: 85vw;
-    transform: translateX(100%);
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 999;
-    background: rgba(20, 16, 12, 0.98) !important;
-    box-shadow: -10px 0 40px rgba(0,0,0,0.5);
-  }
-  .right-panel.open { transform: translateX(0); }
-  .mobile-panel-btn { display: flex; }
-  .mobile-panel-overlay.active { display: block; }
-  .footer-bar { flex-direction: column; gap: 8px; align-items: flex-start; }
-  .footer-copy { text-align: left; }
-  .header { gap: 8px; }
-  .btn { padding: 8px 12px; font-size: 12px; }
-  .header { flex-wrap: wrap; }
-  .header-left { flex-wrap: wrap; gap: 8px; }
-}
+  @media (max-width: 768px) { .main-grid { grid-template-columns: 56px 1fr; } .right-panel { display: none; } .footer-bar { flex-direction: column; gap: 8px; align-items: flex-start; } .footer-copy { text-align: left; } .header { gap: 8px; } .btn { padding: 8px 12px; font-size: 12px; } }
 </style>
 </head>
 <body>
-<!-- iOS Mobile Panel Support -->
-<button class="mobile-panel-btn" id="mobilePanelBtn" title="Show Tools">
-  <i class="fa-solid fa-sliders"></i>
-</button>
-<div class="mobile-panel-overlay" id="mobilePanelOverlay"></div>
 <input type="file" id="projectInput" class="file-input" accept=".json,application/json">
 <input type="file" id="presetInput" class="file-input" accept=".json,application/json">
 
@@ -265,7 +208,7 @@ html, body { height: 100dvh; height: 100vh; /* fallback */ }
 
   <div class="main-grid">
     <div class="tool-rail">
-      <input type="file" id="fileInput" class="file-input" multiple accept="image/*" capture="environment" style="display:none; -webkit-user-select:none;">
+      <input type="file" id="fileInput" class="file-input" multiple accept="image/*">
       <button class="tool-btn active" id="selectTool" title="Select & Move (V)"><i class="fa-solid fa-arrow-pointer"></i></button>
       <button class="tool-btn" id="eraserTool" title="Eraser (E)"><i class="fa-solid fa-eraser"></i></button>
       <button class="tool-btn" id="brushTool" title="Brush (B)"><i class="fa-solid fa-paintbrush"></i></button>
@@ -930,10 +873,8 @@ function renderGuides() {
     el.className = axis === 'v' ? 'guide-v' : 'guide-h';
     el.dataset.coord = coord;
     el.title = 'Drag to move · double-click to remove';
-    el.addEventListener('pointerdown', (e) => {
-      if (!e.isPrimary) return;
+    el.addEventListener('mousedown', (e) => {
       e.preventDefault(); e.stopPropagation();
-      capturePointer(e);
       const idx = state.guides[axis].indexOf(coord);
       if (idx > -1) state.guides[axis].splice(idx, 1);
       state.guideDrag = { axis, coord, el };
@@ -955,9 +896,7 @@ function positionGuides() {
   document.querySelectorAll('#guidesLayer .guide-h').forEach(el => { el.style.top = docToScreenY(parseFloat(el.dataset.coord)) + 'px'; });
 }
 function rulerStart(axis, e) {
-  if (!e.isPrimary) return;
   e.preventDefault(); e.stopPropagation();
-  capturePointer(e);
   const el = document.createElement('div');
   el.className = axis === 'v' ? 'guide-v' : 'guide-h';
   document.getElementById('guidesLayer').appendChild(el);
@@ -966,8 +905,8 @@ function rulerStart(axis, e) {
   if (axis === 'v') el.style.left = docToScreenX(coord) + 'px'; else el.style.top = docToScreenY(coord) + 'px';
   state.guideDrag = { axis, coord, el };
 }
-document.getElementById('rulerTop').addEventListener('pointerdown', e => rulerStart('h', e));
-document.getElementById('rulerLeft').addEventListener('pointerdown', e => rulerStart('v', e));
+document.getElementById('rulerTop').addEventListener('mousedown', e => rulerStart('h', e));
+document.getElementById('rulerLeft').addEventListener('mousedown', e => rulerStart('v', e));
 
 function snapDelta(vals, guides, th) {
   let best = null;
@@ -1413,27 +1352,7 @@ function syncIconMode() {
   canvasCard.classList.toggle('icon-mode', state.activeTool === 'shape');
 }
 
-const activePointerCaptures = new Map();
-function capturePointer(e) {
-  if (e.pointerId == null || !e.currentTarget || !e.currentTarget.setPointerCapture) return;
-  try {
-    e.currentTarget.setPointerCapture(e.pointerId);
-    activePointerCaptures.set(e.pointerId, e.currentTarget);
-  } catch (err) {}
-}
-function releasePointerCapture(e) {
-  const releaseOne = (pointerId) => {
-    const target = activePointerCaptures.get(pointerId);
-    if (!target || !target.releasePointerCapture) return;
-    try { target.releasePointerCapture(pointerId); } catch (err) {}
-    activePointerCaptures.delete(pointerId);
-  };
-  if (e && e.pointerId != null) releaseOne(e.pointerId);
-  else Array.from(activePointerCaptures.keys()).forEach(releaseOne);
-}
-
 function startIconDrag(e) {
-  capturePointer(e);
   const p = clientToDoc(e.clientX, e.clientY);
   state.iconDrag = { x0: p.x, y0: p.y, x1: p.x, y1: p.y };
   updateIconPreview();
@@ -1560,7 +1479,6 @@ buildIconGrid();
 
 /* ---------------- Crop ---------------- */
 function startCropDrag(e) {
-  capturePointer(e);
   e.preventDefault();
   const r = canvasCard.getBoundingClientRect();
   state.cropDrag = { x0: e.clientX - r.left, y0: e.clientY - r.top, x1: e.clientX - r.left, y1: e.clientY - r.top };
@@ -1631,7 +1549,7 @@ function cancelCrop() {
 }
 document.getElementById('cropApplyBtn').addEventListener('click', applyCrop);
 document.getElementById('cropCancelBtn').addEventListener('click', cancelCrop);
-document.getElementById('cropBar').addEventListener('pointerdown', e => e.stopPropagation());
+document.getElementById('cropBar').addEventListener('mousedown', e => e.stopPropagation());
 
 /* ---------------- Cursor & mouse ---------------- */
 function updateCursorPos(e) {
@@ -1641,7 +1559,7 @@ function updateCursorPos(e) {
   document.getElementById('cursorPos').textContent = `${Math.round(p.x)}, ${Math.round(p.y)}`;
 }
 
-document.addEventListener('pointermove', (e) => {
+document.addEventListener('mousemove', (e) => {
   updateCursorPos(e);
 
   if (state.isPanning) {
@@ -1715,7 +1633,7 @@ document.addEventListener('pointermove', (e) => {
   }
 });
 
-function finishPointerInteraction(e) {
+document.addEventListener('mouseup', (e) => {
   if (state.isErasing) state.isErasing = false;
   if (state.isDrawing) state.isDrawing = false;
   if (state.isPanning) { state.isPanning = false; canvasCard.classList.remove('panning'); }
@@ -1770,10 +1688,7 @@ function finishPointerInteraction(e) {
       if (growDocToContainLayer(l)) fitView();
     }
   }
-  releasePointerCapture(e);
-}
-document.addEventListener('pointerup', finishPointerInteraction);
-document.addEventListener('pointercancel', finishPointerInteraction);
+});
 
 function resampleBitmaps(l) {
   const W = Math.max(1, Math.round(l.w)), H = Math.max(1, Math.round(l.h));
@@ -1869,16 +1784,14 @@ function updateLayerTransform(layer) {
 }
 
 function attachLayerEvents(el, layer) {
-  el.addEventListener('pointerdown', (e) => {
-    if (!e.isPrimary) return;
+  el.addEventListener('mousedown', (e) => {
     if (state.spaceDown || e.button === 1) return;
     if (state.activeTool === 'crop') { e.stopPropagation(); startCropDrag(e); return; }
     if (state.activeTool === 'shape') { e.stopPropagation(); startIconDrag(e); return; }
     e.stopPropagation(); selectLayer(layer.id);
     if (!hasContent(layer)) return;
-    if (state.activeTool === 'eraser') { capturePointer(e); saveHistory(); state.isErasing = true; eraseAtPos(e.clientX, e.clientY); return; }
+    if (state.activeTool === 'eraser') { saveHistory(); state.isErasing = true; eraseAtPos(e.clientX, e.clientY); return; }
     if (state.activeTool === 'brush') {
-      capturePointer(e);
       saveHistory(); state.isDrawing = true;
       const coords = getLocalCoords(layer, e.clientX, e.clientY);
       state.lastBrushPoint = coords; drawBrushDot(layer, coords.x, coords.y); return;
@@ -1900,7 +1813,6 @@ function attachLayerEvents(el, layer) {
 
 function startDrag(e, layer) {
   if (!hasContent(layer)) return;
-  capturePointer(e);
   state.isDragging = true; state.dragMoved = false;
   state.dragStart = { x: e.clientX, y: e.clientY, lx: layer.x, ly: layer.y };
   const el = document.querySelector(`[data-layer-id="${layer.id}"]`);
@@ -1908,13 +1820,11 @@ function startDrag(e, layer) {
 }
 
 function startResize(e, layer, handle) {
-  capturePointer(e);
   saveHistory(); state.isResizing = true; state.resizeHandle = handle;
   state.resizeStart = { x: e.clientX, y: e.clientY, w: layer.w, h: layer.h, lx: layer.x, ly: layer.y, aspect: layer.w / layer.h };
 }
 
 function startRotate(e, layer) {
-  capturePointer(e);
   saveHistory(); state.isRotating = true;
   const el = document.querySelector(`[data-layer-id="${layer.id}"]`);
   const rect = el.getBoundingClientRect();
@@ -1922,14 +1832,12 @@ function startRotate(e, layer) {
 }
 
 function startPan(e) {
-  capturePointer(e);
   state.isPanning = true;
   state.panStart = { x: e.clientX, y: e.clientY, px: state.view.px, py: state.view.py };
   canvasCard.classList.add('panning');
 }
 
-canvasCard.addEventListener('pointerdown', (e) => {
-  if (!e.isPrimary) return;
+canvasCard.addEventListener('mousedown', (e) => {
   if (state.spaceDown || e.button === 1) { e.preventDefault(); startPan(e); return; }
   if (state.activeTool === 'crop') { e.preventDefault(); startCropDrag(e); return; }
   if (state.activeTool === 'shape') { e.preventDefault(); startIconDrag(e); return; }
@@ -3020,139 +2928,6 @@ updateGrid();
 updateExportUI();
 requestAnimationFrame(applyView);
 toast('Welcome to the Workshop! Start your Composition', 'fa-hand-sparkles');
-/* ============ iOS MOBILE SUPPORT ============ */
-
-// --- Mobile panel toggle ---
-const mobilePanelBtn = document.getElementById('mobilePanelBtn');
-const mobilePanelOverlay = document.getElementById('mobilePanelOverlay');
-const rightPanel = document.querySelector('.right-panel');
-
-if (mobilePanelBtn && rightPanel) {
-  mobilePanelBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    rightPanel.classList.add('open');
-    mobilePanelOverlay.classList.add('active');
-    mobilePanelBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-  });
-  
-  mobilePanelOverlay.addEventListener('click', () => {
-    rightPanel.classList.remove('open');
-    mobilePanelOverlay.classList.remove('active');
-    mobilePanelBtn.innerHTML = '<i class="fa-solid fa-sliders"></i>';
-  });
-}
-
-// --- Pinch-to-zoom support ---
-function addPinchZoomSupport() {
-  const canvasCard = document.getElementById('canvasCard');
-  if (!canvasCard) return;
-  
-  let pinchStart = null;
-  let pinchStartZoom = 1;
-  
-  canvasCard.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 2) {
-      e.preventDefault();
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      const dist = Math.hypot(
-        touch2.clientX - touch1.clientX,
-        touch2.clientY - touch1.clientY
-      );
-      pinchStart = { dist };
-      pinchStartZoom = state.view.z;
-    }
-  }, { passive: false });
-  
-  canvasCard.addEventListener('touchmove', (e) => {
-    if (e.touches.length === 2 && pinchStart) {
-      e.preventDefault();
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      const dist = Math.hypot(
-        touch2.clientX - touch1.clientX,
-        touch2.clientY - touch1.clientY
-      );
-      const scale = dist / pinchStart.dist;
-      const newZoom = pinchStartZoom * scale;
-      setZoom(newZoom);
-    }
-  }, { passive: false });
-  
-  canvasCard.addEventListener('touchend', (e) => {
-    if (e.touches.length < 2) {
-      pinchStart = null;
-    }
-  });
-}
-
-// --- Double-tap detection for text editing ---
-function addDoubleTapSupport() {
-  let lastTap = 0;
-  let lastTapTarget = null;
-  
-  document.addEventListener('touchend', (e) => {
-    const currentTime = new Date().getTime();
-    const tapLength = currentTime - lastTap;
-    
-    if (tapLength < 300 && tapLength > 0 && lastTapTarget === e.target) {
-      // Double tap detected
-      const layerEl = e.target.closest('[data-layer-id]');
-      if (layerEl) {
-        const layerId = parseInt(layerEl.dataset.layerId);
-        const layer = state.layers.find(l => l.id === layerId);
-        if (layer && layer.type === 'text') {
-          e.preventDefault();
-          // Trigger the same logic as dblclick
-          selectLayer(layerId);
-          openSection('sec-text', true);
-          setTimeout(() => {
-            const ta = document.getElementById('txtContent');
-            if (ta) { ta.focus(); ta.select(); }
-          }, 150);
-        }
-      }
-    }
-    lastTap = currentTime;
-    lastTapTarget = e.target;
-  });
-}
-
-// --- iOS file input enhancement ---
-function enhanceFileInputForIOS() {
-  const fileInput = document.getElementById('fileInput');
-  if (fileInput) {
-    // Ensure proper iOS file selection
-    fileInput.setAttribute('accept', 'image/*');
-    
-    // iOS sometimes needs a direct click without event delegation
-    const addToolBtn = document.getElementById('addTool');
-    if (addToolBtn) {
-      addToolBtn.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        fileInput.click();
-      });
-    }
-  }
-}
-
-// --- Prevent iOS rubber-band scrolling ---
-function preventIOSScrollBounce() {
-  document.addEventListener('touchmove', (e) => {
-    // Allow scrolling only within scrollable containers
-    const scrollable = e.target.closest('.layers-list, .right-panel, .icon-grid, .panel-inner');
-    if (!scrollable) {
-      e.preventDefault();
-    }
-  }, { passive: false });
-}
-
-// --- Initialize all iOS support ---
-addPinchZoomSupport();
-addDoubleTapSupport();
-enhanceFileInputForIOS();
-preventIOSScrollBounce();
 </script>
 </body>
 </html>
